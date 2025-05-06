@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { UserDTO } from "../types/UserDTO";
-import AuthPage from "./AuthPage";
 import {
   Box,
   Container,
@@ -10,13 +9,14 @@ import {
   Toolbar,
   Avatar,
   Paper,
-  Divider,
 } from "@mui/material";
-import LogoutIcon from "@mui/icons-material/Logout";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import LoginIcon from "@mui/icons-material/Login";
+import CodeIcon from "@mui/icons-material/Code";
+import LoginDialog from "../components/LoginDialog";
 
 function MainPage() {
   const [user, setUser] = useState<UserDTO | null>(null);
+  const [loginOpen, setLoginOpen] = useState(false);
 
   useEffect(() => {
     // Check for user in localStorage on component mount
@@ -30,6 +30,7 @@ function MainPage() {
     // Save user to state and localStorage
     setUser(loggedInUser);
     localStorage.setItem("user", JSON.stringify(loggedInUser));
+    setLoginOpen(false);
   };
 
   const handleLogout = () => {
@@ -38,114 +39,170 @@ function MainPage() {
     localStorage.setItem("user", "null");
   };
 
-  // If no user is logged in, show the auth page
-  if (!user) {
-    return <AuthPage onLoginSuccess={handleLoginSuccess} />;
-  }
+  const openLoginDialog = () => {
+    setLoginOpen(true);
+  };
 
-  // If user is logged in, show the dashboard
+  const closeLoginDialog = () => {
+    setLoginOpen(false);
+  };
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      {/* App Bar */}
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            LMS Dashboard
+            <CodeIcon sx={{ mr: 1, verticalAlign: "middle" }} />
+            Coding Problems Platform
           </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Avatar
-                sx={{
-                  bgcolor: "secondary.main",
-                  width: 40,
-                  height: 40,
-                }}
-                src={user.profilePicture || undefined}
-              >
-                {!user.profilePicture &&
-                  user.firstName?.charAt(0).toUpperCase() +
-                    user.lastName?.charAt(0).toUpperCase()}
-              </Avatar>
-              <Box>
+
+          {user ? (
+            // User is logged in - show profile info and logout button
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Avatar
+                  sx={{
+                    bgcolor: "secondary.main",
+                    width: 40,
+                    height: 40,
+                  }}
+                  src={user.profilePicture || undefined}
+                >
+                  {!user.profilePicture &&
+                    user.firstName?.charAt(0).toUpperCase() +
+                      user.lastName?.charAt(0).toUpperCase()}
+                </Avatar>
                 <Typography variant="body2" sx={{ fontWeight: "bold" }}>
                   {user.firstName} {user.lastName}
                 </Typography>
-                <Typography
-                  variant="caption"
-                  sx={{ display: "block", lineHeight: 1 }}
-                >
-                  {user.type}
-                </Typography>
               </Box>
+              <Button color="inherit" onClick={handleLogout}>
+                Logout
+              </Button>
             </Box>
+          ) : (
+            // No user - show login button
             <Button
               color="inherit"
-              startIcon={<LogoutIcon />}
-              onClick={handleLogout}
+              startIcon={<LoginIcon />}
+              onClick={openLoginDialog}
             >
-              Logout
+              Login
             </Button>
-          </Box>
+          )}
         </Toolbar>
       </AppBar>
 
+      {/* Main content */}
       <Container component="main" sx={{ flexGrow: 1, py: 4 }}>
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Welcome, {user.firstName}!
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 3 }}>
-            You are logged in as a {user.type}.
-          </Typography>
+        {user ? (
+          // User is logged in - show welcome message
+          <Box sx={{ textAlign: "center" }}>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Welcome, {user.firstName}!
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 3 }}>
+              You are logged in as a {user.type}.
+            </Typography>
+            <Paper
+              elevation={3}
+              sx={{
+                p: 4,
+                maxWidth: 600,
+                mx: "auto",
+                borderRadius: 2,
+                bgcolor: "primary.light",
+                color: "white",
+              }}
+            >
+              <Typography variant="h5" gutterBottom>
+                Ready to solve some coding problems?
+              </Typography>
+              <Typography variant="body1">
+                Start exploring our collection of programming challenges
+                designed to improve your skills.
+              </Typography>
+            </Paper>
+          </Box>
+        ) : (
+          // No user - show landing page
+          <Box sx={{ textAlign: "center", maxWidth: 800, mx: "auto", mt: 8 }}>
+            <Typography
+              variant="h3"
+              component="h1"
+              gutterBottom
+              sx={{ fontWeight: "bold" }}
+            >
+              Welcome to Coding Problems Platform
+            </Typography>
+            <Typography variant="h5" color="text.secondary" sx={{ mb: 6 }}>
+              Practice, learn and improve your coding skills
+            </Typography>
 
-          <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-              <Avatar
+            <Paper
+              elevation={6}
+              sx={{
+                p: 6,
+                borderRadius: 4,
+                background: "linear-gradient(135deg, #6b73ff 0%, #000dff 100%)",
+                color: "white",
+              }}
+            >
+              <Typography variant="h4" gutterBottom>
+                Ready to get started?
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 4 }}>
+                Login to access hundreds of coding challenges across multiple
+                programming languages.
+              </Typography>
+              <Button
+                variant="contained"
+                color="secondary"
+                size="large"
+                onClick={openLoginDialog}
                 sx={{
-                  width: 100,
-                  height: 100,
-                  bgcolor: user.profilePicture ? "transparent" : "primary.main",
+                  borderRadius: 2,
+                  px: 4,
+                  py: 1.5,
+                  fontSize: "1rem",
+                  textTransform: "none",
+                  fontWeight: "bold",
                 }}
-                src={user.profilePicture || undefined}
               >
-                {!user.profilePicture && <AccountCircleIcon fontSize="large" />}
-              </Avatar>
-
-              <Box>
-                <Typography variant="h6">
-                  {user.firstName} {user.lastName}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mb: 1 }}
-                >
-                  @{user.username}
-                </Typography>
-                <Typography variant="body2">{user.email}</Typography>
-              </Box>
-            </Box>
-          </Paper>
-        </Box>
-
-        {/* Dashboard content would go here */}
-        <Box
-          sx={{
-            p: 3,
-            border: "1px dashed rgba(0, 0, 0, 0.12)",
-            borderRadius: 2,
-            bgcolor: "background.paper",
-            textAlign: "center",
-          }}
-        >
-          <Typography variant="h6" gutterBottom>
-            Dashboard Content
-          </Typography>
-          <Typography variant="body2">
-            This is where your dashboard content would be displayed. Add
-            components specific to your user type here.
-          </Typography>
-        </Box>
+                Login Now
+              </Button>
+            </Paper>
+          </Box>
+        )}
       </Container>
+
+      {/* Footer */}
+      <Box
+        component="footer"
+        sx={{
+          py: 3,
+          px: 2,
+          mt: "auto",
+          backgroundColor: (theme) =>
+            theme.palette.mode === "light"
+              ? theme.palette.grey[200]
+              : theme.palette.grey[800],
+        }}
+      >
+        <Container maxWidth="sm">
+          <Typography variant="body1" align="center">
+            © {new Date().getFullYear()} Coding Problems Platform
+          </Typography>
+        </Container>
+      </Box>
+
+      {/* Login Dialog */}
+      <LoginDialog
+        open={loginOpen}
+        onClose={closeLoginDialog}
+        onLoginSuccess={handleLoginSuccess}
+      />
     </Box>
   );
 }
