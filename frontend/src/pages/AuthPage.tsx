@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { UserDTO } from "../types/UserDTO";
-import { Container, Box, Tabs, Tab, Typography } from "@mui/material";
+import { Container, Box, Tabs, Tab } from "@mui/material";
 import Login from "../components/Login";
 import Register from "../components/Register";
 
