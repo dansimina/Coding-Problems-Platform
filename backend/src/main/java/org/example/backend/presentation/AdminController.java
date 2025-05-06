@@ -1,7 +1,6 @@
 package org.example.backend.presentation;
 
 import org.example.backend.business.logic.ProblemService;
-import org.example.backend.data.access.ProblemRepository;
 import org.example.backend.dto.ProblemDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
