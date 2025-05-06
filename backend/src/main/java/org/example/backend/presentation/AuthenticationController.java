@@ -9,12 +9,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/login")
+@RequestMapping("/api")
 public class AuthenticationController {
     @Autowired
     private UserService userService;
 
-    @PostMapping
+    @PostMapping("/login")
     public ResponseEntity<UserDTO> login(@RequestBody LoginDTO loginDTO) {
         UserDTO user = userService.login(loginDTO);
         if(user != null) {
@@ -22,5 +22,17 @@ public class AuthenticationController {
         }
 
         return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<UserDTO> register(@RequestBody UserDTO userDTO) {
+        UserDTO user;
+        try {
+            user = userService.save(userDTO);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+
+        return new ResponseEntity<>(user, HttpStatus.OK);
     }
 }

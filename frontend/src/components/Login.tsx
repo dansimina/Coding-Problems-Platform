@@ -2,7 +2,19 @@ import api from "../api";
 import { useState } from "react";
 import { LoginDTO } from "../types/LoginDTO";
 import { UserDTO } from "../types/UserDTO";
-import { Alert, Button, TextField } from "@mui/material";
+import {
+  Alert,
+  Button,
+  TextField,
+  Paper,
+  Typography,
+  Box,
+  Container,
+  CircularProgress,
+  Avatar,
+  Fade,
+} from "@mui/material";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 
 interface LoginProps {
   onLogin: (user: UserDTO) => void;
@@ -26,7 +38,7 @@ function Login({ onLogin }: LoginProps) {
       };
 
       const response = await api.post<UserDTO>("/login", loginDTO);
-      onLogin(response.data); // Call the onLogin prop with the user data
+      onLogin(response.data);
     } catch (error) {
       console.error("Login error:", error);
       setError("Invalid username or password");
@@ -36,56 +48,127 @@ function Login({ onLogin }: LoginProps) {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        backgroundColor: "#f5f5f5",
-      }}
-    >
-      <div style={{ width: "400px" }}>
-        <h2 style={{ textAlign: "center", marginBottom: "16px" }}>Login</h2>
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: "16px" }}>
-            <TextField
-              fullWidth
-              label="Username"
-              variant="outlined"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <TextField
-              fullWidth
-              label="Password"
-              type="password"
-              variant="outlined"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          {error && (
-            <div style={{ marginBottom: "16px" }}>
-              <Alert severity="error">{error}</Alert>
-            </div>
-          )}
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            fullWidth
-            disabled={isLoading}
+    <Container component="main" maxWidth="sm">
+      <Fade in={true} timeout={800}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100vh",
+          }}
+        >
+          <Paper
+            elevation={6}
+            sx={{
+              padding: 4,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              borderRadius: 2,
+              width: "100%",
+              backgroundColor: "white",
+            }}
           >
-            {isLoading ? "Logging in..." : "Login"}
-          </Button>
-        </form>
-      </div>
-    </div>
+            <Avatar
+              sx={{
+                margin: 1,
+                bgcolor: "primary.main",
+                width: 56,
+                height: 56,
+              }}
+            >
+              <LockOutlinedIcon fontSize="large" />
+            </Avatar>
+
+            <Typography
+              component="h1"
+              variant="h4"
+              sx={{ mb: 3, fontWeight: "bold" }}
+            >
+              Login
+            </Typography>
+
+            <Box
+              component="form"
+              onSubmit={handleSubmit}
+              sx={{ width: "100%" }}
+            >
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="username"
+                label="Username"
+                name="username"
+                autoComplete="username"
+                autoFocus
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                variant="outlined"
+                sx={{ mb: 2 }}
+              />
+
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label="Password"
+                type="password"
+                id="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                variant="outlined"
+                sx={{ mb: 3 }}
+              />
+
+              {error && (
+                <Fade in={!!error}>
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                  </Alert>
+                </Fade>
+              )}
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                size="large"
+                disabled={isLoading}
+                sx={{
+                  py: 1.5,
+                  mt: 1,
+                  mb: 2,
+                  fontWeight: "bold",
+                  fontSize: "1rem",
+                  textTransform: "none",
+                  borderRadius: 2,
+                }}
+              >
+                {isLoading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Log In"
+                )}
+              </Button>
+
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                align="center"
+                sx={{ mt: 2 }}
+              >
+                Enter your credentials to access the system
+              </Typography>
+            </Box>
+          </Paper>
+        </Box>
+      </Fade>
+    </Container>
   );
 }
 
