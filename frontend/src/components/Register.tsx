@@ -15,8 +15,8 @@ import {
   MenuItem,
   IconButton,
   Tooltip,
+  Stack,
 } from "@mui/material";
-import Grid from "@mui/material/Grid";
 import PersonAddOutlinedIcon from "@mui/icons-material/PersonAddOutlined";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 
@@ -123,14 +123,14 @@ function Register({ onRegisterSuccess }: RegisterProps) {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            minHeight: "100vh",
-            py: 4,
+            // Remove minHeight to avoid scrolling
+            py: 3,
           }}
         >
           <Paper
             elevation={6}
             sx={{
-              padding: 4,
+              padding: 3,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
@@ -144,12 +144,12 @@ function Register({ onRegisterSuccess }: RegisterProps) {
                 sx={{
                   margin: 1,
                   bgcolor: previewImage ? "transparent" : "primary.main",
-                  width: 80,
-                  height: 80,
+                  width: 56,
+                  height: 56,
                 }}
                 src={previewImage || undefined}
               >
-                {!previewImage && <PersonAddOutlinedIcon fontSize="large" />}
+                {!previewImage && <PersonAddOutlinedIcon />}
               </Avatar>
               <Tooltip title="Upload profile picture">
                 <IconButton
@@ -162,8 +162,8 @@ function Register({ onRegisterSuccess }: RegisterProps) {
                     "&:hover": {
                       backgroundColor: "primary.dark",
                     },
-                    width: 32,
-                    height: 32,
+                    width: 24,
+                    height: 24,
                   }}
                   onClick={triggerFileInput}
                 >
@@ -181,8 +181,8 @@ function Register({ onRegisterSuccess }: RegisterProps) {
 
             <Typography
               component="h1"
-              variant="h4"
-              sx={{ mb: 3, fontWeight: "bold" }}
+              variant="h5"
+              sx={{ mb: 2, fontWeight: "bold" }}
             >
               Create Account
             </Typography>
@@ -192,8 +192,10 @@ function Register({ onRegisterSuccess }: RegisterProps) {
               onSubmit={handleSubmit}
               sx={{ width: "100%" }}
             >
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+              {/* Use Stack instead of Grid to avoid layout issues */}
+              <Stack spacing={2}>
+                {/* First row */}
+                <Box sx={{ display: "flex", gap: 2 }}>
                   <TextField
                     required
                     fullWidth
@@ -203,9 +205,8 @@ function Register({ onRegisterSuccess }: RegisterProps) {
                     value={formData.firstName}
                     onChange={handleChange}
                     autoFocus
+                    size="small"
                   />
-                </Grid>
-                <Grid item xs={12} sm={6}>
                   <TextField
                     required
                     fullWidth
@@ -214,34 +215,39 @@ function Register({ onRegisterSuccess }: RegisterProps) {
                     label="Last Name"
                     value={formData.lastName}
                     onChange={handleChange}
+                    size="small"
                   />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    required
-                    fullWidth
-                    id="username"
-                    name="username"
-                    label="Username"
-                    value={formData.username}
-                    onChange={handleChange}
-                    autoComplete="username"
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    required
-                    fullWidth
-                    id="email"
-                    name="email"
-                    label="Email Address"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    autoComplete="email"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
+                </Box>
+
+                {/* Second row */}
+                <TextField
+                  required
+                  fullWidth
+                  id="username"
+                  name="username"
+                  label="Username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  autoComplete="username"
+                  size="small"
+                />
+
+                {/* Third row */}
+                <TextField
+                  required
+                  fullWidth
+                  id="email"
+                  name="email"
+                  label="Email Address"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  autoComplete="email"
+                  size="small"
+                />
+
+                {/* Fourth row */}
+                <Box sx={{ display: "flex", gap: 2 }}>
                   <TextField
                     required
                     fullWidth
@@ -252,9 +258,8 @@ function Register({ onRegisterSuccess }: RegisterProps) {
                     value={formData.password}
                     onChange={handleChange}
                     autoComplete="new-password"
+                    size="small"
                   />
-                </Grid>
-                <Grid item xs={12} sm={6}>
                   <TextField
                     required
                     fullWidth
@@ -264,29 +269,31 @@ function Register({ onRegisterSuccess }: RegisterProps) {
                     type="password"
                     value={formData.confirmPassword}
                     onChange={handleChange}
+                    size="small"
                   />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    select
-                    required
-                    fullWidth
-                    id="type"
-                    name="type"
-                    label="Account Type"
-                    value={formData.type}
-                    onChange={handleChange}
-                  >
-                    <MenuItem value="student">Student</MenuItem>
-                    <MenuItem value="teacher">Teacher</MenuItem>
-                    <MenuItem value="admin">Administrator</MenuItem>
-                  </TextField>
-                </Grid>
-              </Grid>
+                </Box>
+
+                {/* Fifth row */}
+                <TextField
+                  select
+                  required
+                  fullWidth
+                  id="type"
+                  name="type"
+                  label="Account Type"
+                  value={formData.type}
+                  onChange={handleChange}
+                  size="small"
+                >
+                  <MenuItem value="student">Student</MenuItem>
+                  <MenuItem value="teacher">Teacher</MenuItem>
+                  <MenuItem value="admin">Administrator</MenuItem>
+                </TextField>
+              </Stack>
 
               {error && (
                 <Fade in={!!error}>
-                  <Alert severity="error" sx={{ mt: 3, mb: 1 }}>
+                  <Alert severity="error" sx={{ mt: 2, mb: 1 }}>
                     {error}
                   </Alert>
                 </Fade>
@@ -296,20 +303,20 @@ function Register({ onRegisterSuccess }: RegisterProps) {
                 type="submit"
                 fullWidth
                 variant="contained"
-                size="large"
+                size="medium"
                 disabled={isLoading}
                 sx={{
-                  py: 1.5,
+                  py: 1,
                   mt: 3,
-                  mb: 2,
+                  mb: 1,
                   fontWeight: "bold",
-                  fontSize: "1rem",
+                  fontSize: "0.9rem",
                   textTransform: "none",
                   borderRadius: 2,
                 }}
               >
                 {isLoading ? (
-                  <CircularProgress size={24} color="inherit" />
+                  <CircularProgress size={20} color="inherit" />
                 ) : (
                   "Register Now"
                 )}
@@ -319,10 +326,9 @@ function Register({ onRegisterSuccess }: RegisterProps) {
                 variant="body2"
                 color="text.secondary"
                 align="center"
-                sx={{ mt: 2 }}
+                sx={{ mt: 1 }}
               >
-                By registering, you agree to our Terms of Service and Privacy
-                Policy
+                By registering, you agree to our Terms of Service
               </Typography>
             </Box>
           </Paper>

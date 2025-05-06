@@ -32,23 +32,10 @@ function AuthPage({ onLoginSuccess }: AuthPageProps) {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            pt: 5,
-            pb: 3,
+            pt: 3,
+            pb: 1,
           }}
         >
-          <Typography
-            variant="h3"
-            component="h1"
-            sx={{
-              color: "white",
-              fontWeight: 700,
-              mb: 2,
-              textShadow: "1px 1px 3px rgba(0,0,0,0.3)",
-            }}
-          >
-            Coding Problems Platform
-          </Typography>
-
           <Tabs
             value={activeTab}
             onChange={handleTabChange}

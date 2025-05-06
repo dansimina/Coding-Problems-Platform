@@ -56,13 +56,14 @@ function Login({ onLogin }: LoginProps) {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            height: "100vh",
+            // Removed fixed height to prevent scrolling issues
+            py: 3,
           }}
         >
           <Paper
             elevation={6}
             sx={{
-              padding: 4,
+              padding: 3,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
@@ -75,17 +76,17 @@ function Login({ onLogin }: LoginProps) {
               sx={{
                 margin: 1,
                 bgcolor: "primary.main",
-                width: 56,
-                height: 56,
+                width: 48,
+                height: 48,
               }}
             >
-              <LockOutlinedIcon fontSize="large" />
+              <LockOutlinedIcon />
             </Avatar>
 
             <Typography
               component="h1"
-              variant="h4"
-              sx={{ mb: 3, fontWeight: "bold" }}
+              variant="h5"
+              sx={{ mb: 2, fontWeight: "bold" }}
             >
               Login
             </Typography>
@@ -108,6 +109,7 @@ function Login({ onLogin }: LoginProps) {
                 onChange={(e) => setUsername(e.target.value)}
                 variant="outlined"
                 sx={{ mb: 2 }}
+                size="small"
               />
 
               <TextField
@@ -122,7 +124,8 @@ function Login({ onLogin }: LoginProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 variant="outlined"
-                sx={{ mb: 3 }}
+                sx={{ mb: 2 }}
+                size="small"
               />
 
               {error && (
@@ -137,14 +140,14 @@ function Login({ onLogin }: LoginProps) {
                 type="submit"
                 fullWidth
                 variant="contained"
-                size="large"
+                size="medium"
                 disabled={isLoading}
                 sx={{
-                  py: 1.5,
+                  py: 1,
                   mt: 1,
                   mb: 2,
                   fontWeight: "bold",
-                  fontSize: "1rem",
+                  fontSize: "0.9rem",
                   textTransform: "none",
                   borderRadius: 2,
                 }}
@@ -160,7 +163,7 @@ function Login({ onLogin }: LoginProps) {
                 variant="body2"
                 color="text.secondary"
                 align="center"
-                sx={{ mt: 2 }}
+                sx={{ mt: 1 }}
               >
                 Enter your credentials to access the system
               </Typography>
