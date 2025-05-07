@@ -10,6 +10,11 @@ public class Problem extends AbstractEntity {
     private String author;
     private String description;
     private String constraints;
+    private String difficulty;
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String officialSolution;
 
     @Lob
     @Column(columnDefinition = "LONGTEXT")
@@ -24,11 +29,13 @@ public class Problem extends AbstractEntity {
     public Problem() {
     }
 
-    public Problem(String title, String author, String description, String constraints, String image, List<TestCase> tests, List<Topic> topics) {
+    public Problem(String title, String author, String description, String constraints, String difficulty, String officialSolution, String image, List<TestCase> tests, List<Topic> topics) {
         this.title = title;
         this.author = author;
         this.description = description;
         this.constraints = constraints;
+        this.difficulty = difficulty;
+        this.officialSolution = officialSolution;
         this.image = image;
         this.tests = tests;
         this.topics = topics;
@@ -66,6 +73,22 @@ public class Problem extends AbstractEntity {
         this.constraints = constraints;
     }
 
+    public String getDifficulty() {
+        return difficulty;
+    }
+
+    public void setDifficulty(String difficulty) {
+        this.difficulty = difficulty;
+    }
+
+    public String getOfficialSolution() {
+        return officialSolution;
+    }
+
+    public void setOfficialSolution(String officialSolution) {
+        this.officialSolution = officialSolution;
+    }
+
     public String getImage() {
         return image;
     }
@@ -88,18 +111,5 @@ public class Problem extends AbstractEntity {
 
     public void setTopics(List<Topic> topics) {
         this.topics = topics;
-    }
-
-    @Override
-    public String toString() {
-        return "Problem{" +
-                "title='" + title + '\'' +
-                ", author='" + author + '\'' +
-                ", description='" + description + '\'' +
-                ", constraints='" + constraints + '\'' +
-                ", image='" + image + '\'' +
-                ", tests=" + tests +
-                ", topics=" + topics +
-                '}';
     }
 }

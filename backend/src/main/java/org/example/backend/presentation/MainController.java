@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/admin")
-public class AdminController {
+@RequestMapping("/api")
+public class MainController {
     @Autowired
     private ProblemService problemService;
 
@@ -29,13 +29,12 @@ public class AdminController {
         }
     }
 
-    @PostMapping("/problem")
-    public ResponseEntity<String> createProblem(@RequestBody ProblemDTO problemDTO) {
+    @GetMapping("/problems/{problemId}")
+    public ResponseEntity<ProblemDTO> getProblem(@PathVariable long problemId) {
         try {
-            problemService.save(problemDTO);
-            return new ResponseEntity<>("Problem created", HttpStatus.CREATED);
+            return new ResponseEntity<>(problemService.findById(problemId), HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>("Problem creation failed", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -46,17 +45,6 @@ public class AdminController {
         }
         catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @PostMapping("/topic")
-    public ResponseEntity<String> createTopic(@RequestBody TopicDTO topicDTO) {
-        try {
-            topicService.save(topicDTO);
-            return new ResponseEntity<>("Topic created", HttpStatus.CREATED);
-        }
-        catch (Exception e) {
-            return new ResponseEntity<>("Topic creation failed", HttpStatus.BAD_REQUEST);
         }
     }
 }
