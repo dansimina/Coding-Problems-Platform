@@ -71,6 +71,16 @@ function AddProblemPage() {
     };
 
     fetchTopics();
+
+    // Pre-fill author with current user's name if available
+    const storedUser = localStorage.getItem("user");
+    if (storedUser && storedUser !== "null") {
+      const user = JSON.parse(storedUser);
+      setFormData((prev) => ({
+        ...prev,
+        author: `${user.firstName} ${user.lastName}`,
+      }));
+    }
   }, []);
 
   const handleChange = (
@@ -185,16 +195,7 @@ function AddProblemPage() {
     setError("");
 
     try {
-      // Get the current user for author information
-      const storedUser = localStorage.getItem("user");
-      const user = storedUser ? JSON.parse(storedUser) : null;
-
-      const problemToSubmit = {
-        ...formData,
-        author: user ? `${user.firstName} ${user.lastName}` : formData.author,
-      };
-
-      await api.post("/admin/problem", problemToSubmit);
+      await api.post("/admin/problem", formData);
       setSuccess(true);
 
       // Reset form after successful submission
@@ -212,6 +213,16 @@ function AddProblemPage() {
       });
       setSelectedTopics([]);
       setPreviewImage(null);
+
+      // Keep the author field with current user's name
+      const storedUser = localStorage.getItem("user");
+      if (storedUser && storedUser !== "null") {
+        const user = JSON.parse(storedUser);
+        setFormData((prev) => ({
+          ...prev,
+          author: `${user.firstName} ${user.lastName}`,
+        }));
+      }
     } catch (error: any) {
       console.error("Error adding problem:", error);
       setError(
@@ -280,6 +291,19 @@ function AddProblemPage() {
                   </Select>
                 </FormControl>
               </Box>
+
+              {/* Author Field */}
+              <TextField
+                required
+                fullWidth
+                id="author"
+                label="Author"
+                name="author"
+                value={formData.author}
+                onChange={handleChange}
+                placeholder="Enter author name"
+                helperText="The name of the problem author"
+              />
 
               {/* Description */}
               <TextField
