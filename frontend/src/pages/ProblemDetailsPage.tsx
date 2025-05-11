@@ -8,9 +8,11 @@ import {
   Paper,
   Chip,
   Button,
+  Divider,
   CircularProgress,
   Alert,
   Card,
+  CardHeader,
   CardContent,
   Stack,
   Tabs,
@@ -29,6 +31,9 @@ import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { ProblemDTO } from "../types/ProblemDTO";
+import SubmissionComponent from "../components/SubmissionComponent";
+import SubmissionHistoryComponent from "../components/SubmissionHistoryComponent";
+import AllSubmissionsComponent from "../components/AllSubmissionsProps";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -109,6 +114,11 @@ function ProblemDetailsPage() {
 
   const handleBack = () => {
     navigate("/problems");
+  };
+
+  const handleSolveProblem = () => {
+    // Switch to the submission tab
+    setTabValue(2);
   };
 
   const handleAskForHint = async () => {
@@ -290,7 +300,7 @@ function ProblemDetailsPage() {
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <AutoFixHighIcon sx={{ color: "#2196F3" }} />
                   <Typography variant="h6" fontWeight="bold">
-                    GeminiAI HINT
+                    GeminiAI Hint
                   </Typography>
                 </Box>
                 <IconButton
@@ -377,6 +387,9 @@ function ProblemDetailsPage() {
           <Box sx={{ p: 3 }}>
             {/* Description Tab */}
             <TabPanel value={tabValue} index={0}>
+              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                Description
+              </Typography>
               <Typography variant="body1" paragraph>
                 {problem.description}
               </Typography>
@@ -407,7 +420,97 @@ function ProblemDetailsPage() {
               )}
             </TabPanel>
 
-            {/* Other tab panels remain the same... */}
+            {/* Examples Tab */}
+            <TabPanel value={tabValue} index={1}>
+              <Stack spacing={3}>
+                {problem.tests
+                  .filter((test) => test.example)
+                  .map((test, index) => (
+                    <Card key={index} variant="outlined">
+                      <CardHeader title={`Example ${index + 1}`} />
+                      <Divider />
+                      <CardContent>
+                        <Stack spacing={3}>
+                          <Box>
+                            <Typography variant="subtitle2">Input:</Typography>
+                            <Paper
+                              variant="outlined"
+                              sx={{
+                                p: 2,
+                                mt: 1,
+                                bgcolor: "grey.50",
+                                fontFamily: "monospace",
+                                whiteSpace: "pre-wrap",
+                              }}
+                            >
+                              {test.input}
+                            </Paper>
+                          </Box>
+                          <Box>
+                            <Typography variant="subtitle2">Output:</Typography>
+                            <Paper
+                              variant="outlined"
+                              sx={{
+                                p: 2,
+                                mt: 1,
+                                bgcolor: "grey.50",
+                                fontFamily: "monospace",
+                                whiteSpace: "pre-wrap",
+                              }}
+                            >
+                              {test.output}
+                            </Paper>
+                          </Box>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  ))}
+
+                {problem.tests.filter((test) => test.example).length === 0 && (
+                  <Alert severity="info">
+                    No example test cases provided for this problem.
+                  </Alert>
+                )}
+              </Stack>
+            </TabPanel>
+
+            {/* Submit Solution Tab */}
+            <TabPanel value={tabValue} index={2}>
+              <SubmissionComponent problemId={Number(id)} />
+            </TabPanel>
+
+            {/* My Submissions Tab */}
+            <TabPanel value={tabValue} index={3}>
+              <SubmissionHistoryComponent problemId={Number(id)} />
+            </TabPanel>
+
+            {/* All Submissions Tab (Teachers/Admins only) */}
+            {isTeacherOrAdmin && (
+              <TabPanel value={tabValue} index={4}>
+                <AllSubmissionsComponent problemId={Number(id)} />
+              </TabPanel>
+            )}
+
+            {/* Solution Tab */}
+            {problem.officialSolution && (
+              <TabPanel value={tabValue} index={isTeacherOrAdmin ? 5 : 4}>
+                <Typography variant="h6" gutterBottom>
+                  Official Solution
+                </Typography>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 2,
+                    bgcolor: "grey.50",
+                    fontFamily: "monospace",
+                    whiteSpace: "pre-wrap",
+                    overflow: "auto",
+                  }}
+                >
+                  {problem.officialSolution}
+                </Paper>
+              </TabPanel>
+            )}
           </Box>
         </Paper>
       </Container>
