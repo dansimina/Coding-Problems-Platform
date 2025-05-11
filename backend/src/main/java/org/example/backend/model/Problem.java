@@ -26,10 +26,13 @@ public class Problem extends AbstractEntity {
     @ManyToMany
     private List<Topic> topics;
 
+    @OneToMany(mappedBy = "problem")
+    private List<Submission> submissions;
+
     public Problem() {
     }
 
-    public Problem(String title, String author, String description, String constraints, String difficulty, String officialSolution, String image, List<TestCase> tests, List<Topic> topics) {
+    public Problem(String title, String author, String description, String constraints, String difficulty, String officialSolution, String image, List<TestCase> tests, List<Topic> topics, List<Submission> submissions) {
         this.title = title;
         this.author = author;
         this.description = description;
@@ -39,6 +42,7 @@ public class Problem extends AbstractEntity {
         this.image = image;
         this.tests = tests;
         this.topics = topics;
+        this.submissions = submissions;
     }
 
     public String getTitle() {
@@ -111,5 +115,29 @@ public class Problem extends AbstractEntity {
 
     public void setTopics(List<Topic> topics) {
         this.topics = topics;
+    }
+
+    public List<Submission> getSolutions() {
+        return submissions;
+    }
+
+    public void setSolutions(List<Submission> submissions) {
+        this.submissions = submissions;
+    }
+
+    @Override
+    public String toString() {
+        return "Problem{" +
+                "title='" + title + '\'' +
+                ", author='" + author + '\'' +
+                ", description='" + description + '\'' +
+                ", constraints='" + constraints + '\'' +
+                ", difficulty='" + difficulty + '\'' +
+                ", officialSolution='" + officialSolution + '\'' +
+                ", image='" + image + '\'' +
+                ", tests=" + tests +
+                ", topics=" + topics +
+                ", solutions=" + submissions +
+                '}';
     }
 }

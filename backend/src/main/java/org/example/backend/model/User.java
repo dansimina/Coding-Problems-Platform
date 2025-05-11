@@ -1,11 +1,10 @@
 package org.example.backend.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
+import java.util.List;
 
 @Entity
 public class User extends AbstractEntity {
@@ -35,10 +34,13 @@ public class User extends AbstractEntity {
     @ManyToOne
     private UserType type;
 
+    @OneToMany(mappedBy = "user")
+    private List<Submission> submissions;
+
     public User() {
     }
 
-    public User(String username, String password, String firstName, String lastName, String email, String profilePicture, UserType type) {
+    public User(String username, String password, String firstName, String lastName, String email, String profilePicture, UserType type, List<Submission> submissions) {
         this.username = username;
         this.password = password;
         this.firstName = firstName;
@@ -46,6 +48,7 @@ public class User extends AbstractEntity {
         this.email = email;
         this.profilePicture = profilePicture;
         this.type = type;
+        this.submissions = submissions;
     }
 
     public String getUsername() {
@@ -104,6 +107,14 @@ public class User extends AbstractEntity {
         this.type = type;
     }
 
+    public List<Submission> getSolutions() {
+        return submissions;
+    }
+
+    public void setSolutions(List<Submission> submissions) {
+        this.submissions = submissions;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -114,6 +125,7 @@ public class User extends AbstractEntity {
                 ", email='" + email + '\'' +
                 ", profilePicture='" + profilePicture + '\'' +
                 ", type=" + type +
+                ", solutions=" + submissions +
                 '}';
     }
 }
