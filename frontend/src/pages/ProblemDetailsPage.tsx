@@ -24,6 +24,7 @@ import CodeIcon from "@mui/icons-material/Code";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import BugReportIcon from "@mui/icons-material/BugReport";
 import { ProblemDTO } from "../types/ProblemDTO";
+import SubmissionComponent from "../components/SubmissionComponent";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -94,6 +95,11 @@ function ProblemDetailsPage() {
 
   const handleBack = () => {
     navigate("/problems");
+  };
+
+  const handleSolveProblem = () => {
+    // Switch to the submission tab
+    setTabValue(2);
   };
 
   if (isLoading) {
@@ -203,6 +209,7 @@ function ProblemDetailsPage() {
               startIcon={<CodeIcon />}
               size="large"
               sx={{ borderRadius: 2, textTransform: "none" }}
+              onClick={handleSolveProblem}
             >
               Solve Problem
             </Button>
@@ -230,11 +237,18 @@ function ProblemDetailsPage() {
                 icon={<BugReportIcon fontSize="small" />}
                 iconPosition="start"
               />
+              <Tab
+                label="Submit Solution"
+                id="problem-tab-2"
+                aria-controls="problem-tabpanel-2"
+                icon={<CodeIcon fontSize="small" />}
+                iconPosition="start"
+              />
               {problem.officialSolution && (
                 <Tab
                   label="Solution"
-                  id="problem-tab-2"
-                  aria-controls="problem-tabpanel-2"
+                  id="problem-tab-3"
+                  aria-controls="problem-tabpanel-3"
                   icon={<LightbulbIcon fontSize="small" />}
                   iconPosition="start"
                 />
@@ -329,9 +343,14 @@ function ProblemDetailsPage() {
               </Stack>
             </TabPanel>
 
+            {/* Submit Solution Tab */}
+            <TabPanel value={tabValue} index={2}>
+              <SubmissionComponent problemId={Number(id)} />
+            </TabPanel>
+
             {/* Solution Tab */}
             {problem.officialSolution && (
-              <TabPanel value={tabValue} index={2}>
+              <TabPanel value={tabValue} index={3}>
                 <Typography variant="h6" gutterBottom>
                   Official Solution
                 </Typography>

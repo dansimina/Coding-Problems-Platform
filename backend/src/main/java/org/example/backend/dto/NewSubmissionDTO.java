@@ -2,7 +2,7 @@ package org.example.backend.dto;
 
 public record NewSubmissionDTO(
         String code,
+        String language,
         Long userId,
-        Long problemId,
-        String language) {
+        Long problemId) {
 }
