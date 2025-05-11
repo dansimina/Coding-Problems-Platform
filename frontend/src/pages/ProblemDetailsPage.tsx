@@ -116,11 +116,6 @@ function ProblemDetailsPage() {
     navigate("/problems");
   };
 
-  const handleSolveProblem = () => {
-    // Switch to the submission tab
-    setTabValue(2);
-  };
-
   const handleAskForHint = async () => {
     if (!problem) return;
 
