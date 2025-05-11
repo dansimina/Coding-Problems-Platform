@@ -1,8 +1,10 @@
 package org.example.backend.presentation;
 
 import org.example.backend.business.logic.ProblemService;
+import org.example.backend.business.logic.SubmissionService;
 import org.example.backend.business.logic.TopicService;
 import org.example.backend.dto.ProblemDTO;
+import org.example.backend.dto.SubmissionDTO;
 import org.example.backend.dto.TopicDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,9 @@ public class AdminController {
 
     @Autowired
     private TopicService topicService;
+
+    @Autowired
+    private SubmissionService submissionService;
 
     @GetMapping("/problems")
     public ResponseEntity<List<ProblemDTO>> getProblems() {
@@ -57,6 +62,17 @@ public class AdminController {
         }
         catch (Exception e) {
             return new ResponseEntity<>("Topic creation failed", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/submissions/problem/{problemId}")
+    public ResponseEntity<List<SubmissionDTO>> getAllSubmissionsForProblem(
+            @PathVariable Long problemId) {
+        try {
+            List<SubmissionDTO> submissions = submissionService.findByProblemId(problemId);
+            return ResponseEntity.ok(submissions);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

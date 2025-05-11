@@ -6,6 +6,7 @@ export interface SubmissionDTO {
     language: string;
     report: string;
     score: number;
+    submittedAt: string;
     user: UserDTO;
     problem: ProblemDTO;
 }

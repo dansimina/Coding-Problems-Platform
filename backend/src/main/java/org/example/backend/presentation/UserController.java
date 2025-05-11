@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
@@ -21,5 +23,10 @@ public class UserController {
     @PostMapping("/submit")
     public ResponseEntity<SubmissionDTO> submit(@RequestBody NewSubmissionDTO submission) {
         return new ResponseEntity<>(submissionService.submit(submission), HttpStatus.CREATED);
+    }
+
+    @GetMapping("/submissions/{userId}/{problemId}")
+    public ResponseEntity<List<SubmissionDTO>> getUserSubmissionsForProblem(@PathVariable Long userId, @PathVariable Long problemId) {
+        return ResponseEntity.ok(submissionService.findByUserAndProblem(userId, problemId));
     }
 }

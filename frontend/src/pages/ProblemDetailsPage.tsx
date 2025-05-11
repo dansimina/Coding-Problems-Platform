@@ -23,8 +23,12 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CodeIcon from "@mui/icons-material/Code";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import BugReportIcon from "@mui/icons-material/BugReport";
+import HistoryIcon from "@mui/icons-material/History";
+import GroupIcon from "@mui/icons-material/Group";
 import { ProblemDTO } from "../types/ProblemDTO";
 import SubmissionComponent from "../components/SubmissionComponent";
+import SubmissionHistoryComponent from "../components/SubmissionHistoryComponent";
+import AllSubmissionsComponent from "../components/AllSubmissionsProps";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -55,6 +59,13 @@ function ProblemDetailsPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [tabValue, setTabValue] = useState(0);
+
+  // Check if user is teacher or admin
+  const storedUser = localStorage.getItem("user");
+  const user =
+    storedUser && storedUser !== "null" ? JSON.parse(storedUser) : null;
+  const isTeacherOrAdmin =
+    user && (user.type === "teacher" || user.type === "admin");
 
   useEffect(() => {
     const fetchProblem = async () => {
@@ -244,11 +255,27 @@ function ProblemDetailsPage() {
                 icon={<CodeIcon fontSize="small" />}
                 iconPosition="start"
               />
+              <Tab
+                label="My Submissions"
+                id="problem-tab-3"
+                aria-controls="problem-tabpanel-3"
+                icon={<HistoryIcon fontSize="small" />}
+                iconPosition="start"
+              />
+              {isTeacherOrAdmin && (
+                <Tab
+                  label="All Submissions"
+                  id="problem-tab-4"
+                  aria-controls="problem-tabpanel-4"
+                  icon={<GroupIcon fontSize="small" />}
+                  iconPosition="start"
+                />
+              )}
               {problem.officialSolution && (
                 <Tab
                   label="Solution"
-                  id="problem-tab-3"
-                  aria-controls="problem-tabpanel-3"
+                  id={`problem-tab-${isTeacherOrAdmin ? 5 : 4}`}
+                  aria-controls={`problem-tabpanel-${isTeacherOrAdmin ? 5 : 4}`}
                   icon={<LightbulbIcon fontSize="small" />}
                   iconPosition="start"
                 />
@@ -256,8 +283,9 @@ function ProblemDetailsPage() {
             </Tabs>
           </Box>
 
-          {/* Description Tab */}
+          {/* Tab Panels */}
           <Box sx={{ p: 3 }}>
+            {/* Description Tab */}
             <TabPanel value={tabValue} index={0}>
               <Typography variant="body1" paragraph>
                 {problem.description}
@@ -348,9 +376,21 @@ function ProblemDetailsPage() {
               <SubmissionComponent problemId={Number(id)} />
             </TabPanel>
 
+            {/* My Submissions Tab */}
+            <TabPanel value={tabValue} index={3}>
+              <SubmissionHistoryComponent problemId={Number(id)} />
+            </TabPanel>
+
+            {/* All Submissions Tab (Teachers/Admins only) */}
+            {isTeacherOrAdmin && (
+              <TabPanel value={tabValue} index={4}>
+                <AllSubmissionsComponent problemId={Number(id)} />
+              </TabPanel>
+            )}
+
             {/* Solution Tab */}
             {problem.officialSolution && (
-              <TabPanel value={tabValue} index={3}>
+              <TabPanel value={tabValue} index={isTeacherOrAdmin ? 5 : 4}>
                 <Typography variant="h6" gutterBottom>
                   Official Solution
                 </Typography>

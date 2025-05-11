@@ -50,4 +50,12 @@ public class SubmissionService {
 
         return submissionMapper.toDTO(submissionRepository.save(submission));
     }
+
+    public List<SubmissionDTO> findByUserAndProblem(Long userId, Long problemId) {
+        return submissionMapper.toDTO(submissionRepository.findByUserIdAndProblemIdOrderByIdDesc(userId, problemId));
+    }
+
+    public List<SubmissionDTO> findByProblemId(Long problemId) {
+        return submissionMapper.toDTO(submissionRepository.findByProblemIdOrderByIdDesc(problemId));
+    }
 }

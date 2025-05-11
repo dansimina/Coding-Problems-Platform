@@ -1,7 +1,11 @@
 package org.example.backend.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+
+import java.time.LocalDateTime;
 
 @Entity
 public class Submission extends AbstractEntity {
@@ -9,6 +13,12 @@ public class Submission extends AbstractEntity {
     String language;
     String report;
     Integer score;
+
+    LocalDateTime submittedAt;
+    @PrePersist
+    public void prePersist() {
+        submittedAt = LocalDateTime.now();
+    }
 
     @ManyToOne
     User user;
@@ -76,6 +86,10 @@ public class Submission extends AbstractEntity {
         this.problem = problem;
     }
 
+    public LocalDateTime getSubmittedAt() {
+        return submittedAt;
+    }
+
     @Override
     public String toString() {
         return "Submission{" +
@@ -83,6 +97,7 @@ public class Submission extends AbstractEntity {
                 ", language='" + language + '\'' +
                 ", report='" + report + '\'' +
                 ", score=" + score +
+                ", submittedAt=" + submittedAt +
                 ", user=" + user +
                 ", problem=" + problem +
                 '}';
