@@ -2,6 +2,7 @@ import { ProblemDTO } from "./ProblemDTO";
 import { UserDTO } from "./UserDTO";
 
 export interface SubmissionDTO {
+    id: number | null;
     code: string;
     language: string;
     report: string;

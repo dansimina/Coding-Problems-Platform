@@ -130,8 +130,19 @@ function SubmissionHistoryComponent({ problemId }: SubmissionHistoryProps) {
       // setComplexity(response.data.complexityAnalysis);
 
       // Placeholder for now
+
+      if (selectedSubmission.id) {
+        console.log(
+          "Analyzing complexity for submission ID:",
+          selectedSubmission.id
+        );
+        const response = await api.post(
+          `/analyze-complexity/${selectedSubmission.id}`
+        );
+        setComplexity(response.data.complexityAnalysis);
+      }
+
       setTimeout(() => {
-        setComplexity("Complexity analysis will be implemented here...");
         setIsAnalyzingComplexity(false);
       }, 1000);
     } catch (error) {

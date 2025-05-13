@@ -58,4 +58,8 @@ public class SubmissionService {
     public List<SubmissionDTO> findByProblemId(Long problemId) {
         return submissionMapper.toDTO(submissionRepository.findByProblemIdOrderByIdDesc(problemId));
     }
+
+    public SubmissionDTO findById(Long id) {
+        return submissionMapper.toDTO(submissionRepository.findById(id).orElse(null));
+    }
 }
