@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "../api";
 import {
   Box,
@@ -15,20 +14,14 @@ import {
   CircularProgress,
   Alert,
   Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  IconButton,
-  Avatar,
-  Divider,
   Stack,
+  Avatar,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import PersonIcon from "@mui/icons-material/Person";
-import CloseIcon from "@mui/icons-material/Close";
-import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
+import { useNavigate } from "react-router-dom";
 import { SubmissionDTO } from "../types/SubmissionDTO";
+import SubmissionDetailsDialog from "./SubmissionDetailsDialog";
 
 interface AllSubmissionsProps {
   problemId: number;
@@ -42,9 +35,6 @@ function AllSubmissionsComponent({ problemId }: AllSubmissionsProps) {
   const [selectedSubmission, setSelectedSubmission] =
     useState<SubmissionDTO | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const [complexity, setComplexity] = useState<string | null>(null);
-  const [isAnalyzingComplexity, setIsAnalyzingComplexity] =
-    useState<boolean>(false);
 
   useEffect(() => {
     fetchAllSubmissions();
@@ -96,7 +86,6 @@ function AllSubmissionsComponent({ problemId }: AllSubmissionsProps) {
 
   const handleViewSubmission = (submission: SubmissionDTO) => {
     setSelectedSubmission(submission);
-    setComplexity(null);
     setIsDialogOpen(true);
   };
 
@@ -106,43 +95,7 @@ function AllSubmissionsComponent({ problemId }: AllSubmissionsProps) {
 
   const handleCloseDialog = () => {
     setSelectedSubmission(null);
-    setComplexity(null);
     setIsDialogOpen(false);
-  };
-
-  const parseTestResults = (report: string) => {
-    const lines = report.split("\n").filter((line) => line.trim());
-    return lines.map((line, index) => {
-      const isPassed = line.toLowerCase().includes("pass");
-      const isFailed = line.toLowerCase().includes("fail");
-
-      let color: "success" | "error" | "default" = "default";
-
-      if (isPassed) {
-        color = "success";
-      } else if (isFailed) {
-        color = "error";
-      }
-
-      return { text: line, color, key: index };
-    });
-  };
-
-  const handleAnalyzeComplexity = async () => {
-    if (!selectedSubmission) return;
-
-    setIsAnalyzingComplexity(true);
-
-    try {
-      // TODO: Implement Gemini AI integration
-      setTimeout(() => {
-        setComplexity("Complexity analysis will be implemented here...");
-        setIsAnalyzingComplexity(false);
-      }, 1000);
-    } catch (error) {
-      console.error("Error analyzing complexity:", error);
-      setIsAnalyzingComplexity(false);
-    }
   };
 
   if (isLoading) {
@@ -268,179 +221,14 @@ function AllSubmissionsComponent({ problemId }: AllSubmissionsProps) {
         )}
       </Paper>
 
-      {/* Submission Details Dialog */}
-      <Dialog
+      {/* Using the new reusable SubmissionDetailsDialog component */}
+      <SubmissionDetailsDialog
         open={isDialogOpen}
         onClose={handleCloseDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Typography variant="h6">Submission Details</Typography>
-          <IconButton
-            aria-label="close"
-            onClick={handleCloseDialog}
-            sx={{ color: (theme) => theme.palette.grey[500] }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent dividers>
-          {selectedSubmission && (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              {/* User Info */}
-              <Box>
-                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                  Submitted By
-                </Typography>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <Avatar sx={{ width: 48, height: 48 }}>
-                    {selectedSubmission.user.profilePicture ? (
-                      <img
-                        src={selectedSubmission.user.profilePicture}
-                        alt=""
-                        style={{ width: "100%", height: "100%" }}
-                      />
-                    ) : (
-                      selectedSubmission.user.firstName.charAt(0).toUpperCase()
-                    )}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="body1" fontWeight="medium">
-                      {selectedSubmission.user.firstName}{" "}
-                      {selectedSubmission.user.lastName}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      @{selectedSubmission.user.username} •{" "}
-                      {selectedSubmission.user.type}
-                    </Typography>
-                  </Box>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<PersonIcon />}
-                    onClick={() =>
-                      handleViewUserProfile(selectedSubmission.user.id!)
-                    }
-                    sx={{ ml: "auto" }}
-                  >
-                    View Profile
-                  </Button>
-                </Box>
-              </Box>
-
-              <Divider />
-
-              {/* Score */}
-              <Box>
-                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                  Score
-                </Typography>
-                <Chip
-                  label={`${selectedSubmission.score}%`}
-                  color={getScoreColor(selectedSubmission.score)}
-                  size="medium"
-                />
-              </Box>
-
-              {/* Code */}
-              <Box>
-                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                  Code
-                </Typography>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 2,
-                    bgcolor: "grey.50",
-                    fontFamily: "monospace",
-                    whiteSpace: "pre-wrap",
-                    overflow: "auto",
-                    maxHeight: "400px",
-                  }}
-                >
-                  {selectedSubmission.code}
-                </Paper>
-              </Box>
-
-              {/* Complexity Analysis Section */}
-              <Box>
-                <Box
-                  sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
-                >
-                  <Typography variant="subtitle1" fontWeight="bold">
-                    Complexity Analysis
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    startIcon={<AutoFixHighIcon />}
-                    onClick={handleAnalyzeComplexity}
-                    disabled={isAnalyzingComplexity}
-                    sx={{
-                      background:
-                        "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
-                      textTransform: "none",
-                    }}
-                  >
-                    {isAnalyzingComplexity
-                      ? "Analyzing..."
-                      : "Analyze with Gemini AI"}
-                  </Button>
-                </Box>
-
-                {complexity && (
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 2,
-                      bgcolor: "grey.50",
-                      minHeight: "100px",
-                    }}
-                  >
-                    <Typography variant="body2">{complexity}</Typography>
-                  </Paper>
-                )}
-              </Box>
-
-              <Divider />
-
-              {/* Test Results */}
-              <Box>
-                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                  Test Results
-                </Typography>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  {parseTestResults(selectedSubmission.report).map((result) => (
-                    <Typography
-                      key={result.key}
-                      variant="body2"
-                      sx={{
-                        fontFamily: "monospace",
-                        color:
-                          result.color === "default"
-                            ? "text.primary"
-                            : `${result.color}.main`,
-                      }}
-                    >
-                      {result.text}
-                    </Typography>
-                  ))}
-                </Box>
-              </Box>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Close</Button>
-        </DialogActions>
-      </Dialog>
+        submission={selectedSubmission}
+        showUserInfo={true}
+        onViewUserProfile={handleViewUserProfile}
+      />
     </>
   );
 }

@@ -8,5 +8,6 @@ public record UserDTO(
         String lastName,
         String email,
         String profilePicture,
-        String type) {
+        String type
+) {
 }

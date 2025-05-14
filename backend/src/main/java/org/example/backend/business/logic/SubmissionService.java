@@ -62,4 +62,8 @@ public class SubmissionService {
     public SubmissionDTO findById(Long id) {
         return submissionMapper.toDTO(submissionRepository.findById(id).orElse(null));
     }
+
+//    public SubmissionDTO findUserIdAndProblemIdLast(Long userId, Long problemId) {
+//        return submissionMapper.toDTO(submissionRepository.findUserIdAndProblemIdLastUpdated(userId, problemId));
+//    }
 }

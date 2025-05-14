@@ -26,6 +26,7 @@ import AddIcon from "@mui/icons-material/Add";
 import CategoryIcon from "@mui/icons-material/Category";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
+import ClassIcon from "@mui/icons-material/Class";
 import LoginDialog from "./LoginDialog";
 import { useNavigate } from "react-router-dom";
 
@@ -41,6 +42,8 @@ function NavigationBar() {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTeacherOrAdmin =
+    user && (user.type === "teacher" || user.type === "admin");
 
   // Load user from localStorage on component mount
   useEffect(() => {
@@ -85,10 +88,99 @@ function NavigationBar() {
       case "profile":
         navigate("/profile");
         break;
+      case "classrooms":
+        navigate("/classrooms");
+        break;
+      case "addClassroom":
+        navigate("/add-classroom");
+        break;
       default:
         navigate("/");
         break;
     }
+  };
+
+  // Generate nav menu items
+  const renderNavMenuItems = () => {
+    const items = [];
+
+    // Basic items for all users
+    items.push(
+      <MenuItem
+        key="problems"
+        onClick={() => handleMenuClick("problems")}
+        sx={{
+          borderRadius: 1,
+          m: 0.5,
+          "&:hover": { bgcolor: "action.hover" },
+        }}
+      >
+        <ListItemIcon>
+          <ListAltIcon color="primary" />
+        </ListItemIcon>
+        <ListItemText primary="Problems" />
+      </MenuItem>
+    );
+
+    // Admin-only items
+    if (user?.type === "admin") {
+      items.push(
+        <MenuItem
+          key="addProblem"
+          onClick={() => handleMenuClick("addProblem")}
+          sx={{
+            borderRadius: 1,
+            m: 0.5,
+            "&:hover": { bgcolor: "action.hover" },
+          }}
+        >
+          <ListItemIcon>
+            <AddIcon color="primary" />
+          </ListItemIcon>
+          <ListItemText primary="Add new problem" />
+        </MenuItem>
+      );
+
+      items.push(
+        <MenuItem
+          key="addTopic"
+          onClick={() => handleMenuClick("addTopic")}
+          sx={{
+            borderRadius: 1,
+            m: 0.5,
+            "&:hover": { bgcolor: "action.hover" },
+          }}
+        >
+          <ListItemIcon>
+            <CategoryIcon color="primary" />
+          </ListItemIcon>
+          <ListItemText primary="Add new topic" />
+        </MenuItem>
+      );
+    }
+
+    // Teacher or Admin items
+    if (isTeacherOrAdmin) {
+      items.push(<Divider key="divider" sx={{ my: 1 }} />);
+      items.push(
+        <MenuItem
+          key="classrooms"
+          onClick={() => handleMenuClick("classrooms")}
+          sx={{
+            borderRadius: 1,
+            m: 0.5,
+            "&:hover": { bgcolor: "action.hover" },
+          }}
+        >
+          <ListItemIcon>
+            <ClassIcon color="primary" />
+          </ListItemIcon>
+          <ListItemText primary="My Classrooms" />
+        </MenuItem>
+      );
+    }
+
+    return items;
   };
 
   return (
@@ -155,51 +247,7 @@ function NavigationBar() {
                 },
               }}
             >
-              <MenuItem
-                onClick={() => handleMenuClick("problems")}
-                sx={{
-                  borderRadius: 1,
-                  m: 0.5,
-                  "&:hover": { bgcolor: "action.hover" },
-                }}
-              >
-                <ListItemIcon>
-                  <ListAltIcon color="primary" />
-                </ListItemIcon>
-                <ListItemText primary="Problems" />
-              </MenuItem>
-
-              {user?.type === "admin" && (
-                <MenuItem
-                  onClick={() => handleMenuClick("addProblem")}
-                  sx={{
-                    borderRadius: 1,
-                    m: 0.5,
-                    "&:hover": { bgcolor: "action.hover" },
-                  }}
-                >
-                  <ListItemIcon>
-                    <AddIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Add new problem" />
-                </MenuItem>
-              )}
-
-              {user?.type === "admin" && (
-                <MenuItem
-                  onClick={() => handleMenuClick("addTopic")}
-                  sx={{
-                    borderRadius: 1,
-                    m: 0.5,
-                    "&:hover": { bgcolor: "action.hover" },
-                  }}
-                >
-                  <ListItemIcon>
-                    <CategoryIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Add new topic" />
-                </MenuItem>
-              )}
+              {renderNavMenuItems()}
             </Menu>
 
             <Typography
@@ -317,6 +365,22 @@ function NavigationBar() {
                     </ListItemIcon>
                     <ListItemText primary="My Profile" />
                   </MenuItem>
+
+                  {isTeacherOrAdmin && (
+                    <MenuItem
+                      onClick={() => handleMenuClick("classrooms")}
+                      sx={{
+                        borderRadius: 1,
+                        m: 0.5,
+                        "&:hover": { bgcolor: "action.hover" },
+                      }}
+                    >
+                      <ListItemIcon>
+                        <ClassIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText primary="My Classrooms" />
+                    </MenuItem>
+                  )}
 
                   <MenuItem
                     onClick={handleLogout}

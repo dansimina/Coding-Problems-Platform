@@ -12,5 +12,6 @@ public record ProblemDTO(
         String officialSolution,
         String image,
         List<TestCaseDTO> tests,
-        List<TopicDTO> topics) {
+        List<TopicDTO> topics
+) {
 }

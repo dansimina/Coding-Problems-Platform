@@ -10,5 +10,6 @@ public record SubmissionDTO (
     Integer score,
     LocalDateTime submittedAt,
     UserDTO user,
-    ProblemDTO problem) {
+    ProblemDTO problem
+) {
 }

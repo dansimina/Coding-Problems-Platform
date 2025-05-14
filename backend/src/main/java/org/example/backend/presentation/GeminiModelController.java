@@ -35,8 +35,14 @@ public class GeminiModelController {
     @PostMapping("/analyze-complexity/{submissionId}")
     public ResponseEntity<Map<String, String>> analyzeComplexity(@PathVariable long submissionId) {
         SubmissionDTO submissionDTO = submissionService.findById(submissionId);
-        String prompt = "Analyze the complexity for this submission:\nWrite it using this template:\nA little explanation {enter} Time complexity: {answer} {enter} Space complexity: {answer}";
-        prompt += submissionDTO.code();
+
+        String prompt = "Analyze the complexity for this code:\n\n" +
+                "Respond using EXACTLY this format with line breaks:\n\n" +
+                "Algorithm explanation\n\n" +
+                "Time complexity: O(?) \n\n" +
+                "Space complexity: O(?)\n\n" +
+                "Code:\n" + submissionDTO.code();
+
         String result = chatClient.prompt(prompt).call().content();
 
         Map<String, String> response = new HashMap<>();

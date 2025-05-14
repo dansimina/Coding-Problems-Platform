@@ -1,40 +1,236 @@
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  useNavigate,
-  useLocation,
-} from "react-router-dom";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { CssBaseline } from "@mui/material";
+import { UserDTO } from "./types/UserDTO";
 import MainPage from "./pages/MainPage";
-import AddTopicPage from "./pages/AddTopicPage";
-import AddProblemPage from "./pages/AddProblemPage";
 import ProblemsPage from "./pages/ProblemsPage";
 import ProblemDetailsPage from "./pages/ProblemDetailsPage";
+import AddProblemPage from "./pages/AddProblemPage";
+import AddTopicPage from "./pages/AddTopicPage";
+import AuthPage from "./pages/AuthPage";
+// Import classroom-related pages
+import CreateClassroomPage from "./pages/CreateClassroomPage";
+import ClassroomsPage from "./pages/ClassroomsPage";
+import ClassroomDetailsPage from "./pages/ClassroomDetailsPage";
+// Import new homework-related page
+import CreateHomeworkPage from "./pages/CreateHomeworkPage";
 
-function LoginRedirect() {
-  const navigate = useNavigate();
-  const location = useLocation();
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#1976d2",
+    },
+    secondary: {
+      main: "#f50057",
+    },
+    background: {
+      default: "#f5f5f5",
+    },
+  },
+  typography: {
+    fontFamily: "'Roboto', 'Helvetica', 'Arial', sans-serif",
+    h1: {
+      fontWeight: 600,
+    },
+    h2: {
+      fontWeight: 600,
+    },
+    h3: {
+      fontWeight: 600,
+    },
+    h4: {
+      fontWeight: 500,
+    },
+    h5: {
+      fontWeight: 500,
+    },
+    h6: {
+      fontWeight: 500,
+    },
+  },
+  shape: {
+    borderRadius: 8,
+  },
+  components: {
+    MuiButton: {
+      defaultProps: {
+        disableElevation: true,
+      },
+      styleOverrides: {
+        root: {
+          textTransform: "none",
+          fontWeight: 500,
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.1)",
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.08)",
+        },
+      },
+    },
+  },
+});
 
-  useEffect(() => {
-    navigate(location.pathname); // Redirect to the current path
-  }, [navigate, location]);
+// Custom route component for routes requiring authentication with specified roles
+interface ProtectedRouteProps {
+  element: React.ReactNode;
+  allowedRoles?: string[];
+}
 
-  return null; // Render nothing
+// In your App.tsx, update the ProtectedRoute function to add more detailed logging:
+function ProtectedRoute({ element, allowedRoles = [] }: ProtectedRouteProps) {
+  // Get user from localStorage
+  const storedUser = localStorage.getItem("user");
+  console.log("ProtectedRoute raw storedUser:", storedUser);
+
+  const user =
+    storedUser && storedUser !== "null" ? JSON.parse(storedUser) : null;
+
+  console.log("ProtectedRoute checking access...");
+  console.log("User object:", user);
+  console.log("User type:", user?.type);
+  console.log("Allowed roles:", allowedRoles);
+
+  if (!user) {
+    console.log("No user found, redirecting to login");
+    // No user, redirect to login
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRoles.length > 0 && !allowedRoles.includes(user.type)) {
+    console.log(
+      `User type ${user.type} not in allowed roles, redirecting to home`
+    );
+    // User doesn't have the required role, redirect to home
+    return <Navigate to="/" replace />;
+  }
+
+  console.log("Access granted, rendering protected element");
+  // User authenticated and has the required role
+  return <>{element}</>;
 }
 
 function App() {
+  const [user, setUser] = useState<UserDTO | null>(null);
+
+  useEffect(() => {
+    // Load user from localStorage on app init
+    const storedUser = localStorage.getItem("user");
+    if (storedUser && storedUser !== "null") {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const handleLoginSuccess = (user: UserDTO) => {
+    setUser(user);
+    localStorage.setItem("user", JSON.stringify(user));
+  };
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<MainPage />} />
-        <Route path="login" element={<LoginRedirect />} />
-        <Route path="add-topic" element={<AddTopicPage />} />
-        <Route path="add-problem" element={<AddProblemPage />} />
-        <Route path="problems" element={<ProblemsPage />} />
-        <Route path="problems/:id" element={<ProblemDetailsPage />} />
-      </Routes>
-    </BrowserRouter>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <BrowserRouter>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<MainPage />} />
+          <Route path="/problems" element={<ProblemsPage />} />
+          <Route path="/problems/:id" element={<ProblemDetailsPage />} />
+          <Route
+            path="/login"
+            element={
+              user ? (
+                <Navigate to="/" replace />
+              ) : (
+                <AuthPage onLoginSuccess={handleLoginSuccess} />
+              )
+            }
+          />
+
+          {/* Protected Routes */}
+          {/* Admin Routes */}
+          <Route
+            path="/add-problem"
+            element={
+              <ProtectedRoute
+                element={<AddProblemPage />}
+                allowedRoles={["admin"]}
+              />
+            }
+          />
+          <Route
+            path="/add-topic"
+            element={
+              <ProtectedRoute
+                element={<AddTopicPage />}
+                allowedRoles={["admin"]}
+              />
+            }
+          />
+
+          {/* Teacher & Admin Routes */}
+          <Route
+            path="/classrooms"
+            element={
+              <ProtectedRoute
+                element={<ClassroomsPage />}
+                allowedRoles={["teacher", "admin"]}
+              />
+            }
+          />
+          <Route
+            path="/add-classroom"
+            element={
+              <ProtectedRoute
+                element={<CreateClassroomPage />}
+                allowedRoles={["teacher", "admin"]}
+              />
+            }
+          />
+          <Route
+            path="/classroom/:classroomId"
+            element={
+              <ProtectedRoute
+                element={<ClassroomDetailsPage />}
+                allowedRoles={["teacher", "admin"]}
+              />
+            }
+          />
+          <Route
+            path="/edit-classroom/:id"
+            element={
+              <ProtectedRoute
+                element={<CreateClassroomPage />}
+                allowedRoles={["teacher", "admin"]}
+              />
+            }
+          />
+
+          {/* New route for adding homework */}
+          <Route
+            path="/add-homework/:classroomId"
+            element={
+              <ProtectedRoute
+                element={<CreateHomeworkPage />}
+                allowedRoles={["teacher", "admin"]}
+              />
+            }
+          />
+
+          {/* Catch-all route for undefined routes */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

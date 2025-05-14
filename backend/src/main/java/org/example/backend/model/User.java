@@ -37,10 +37,16 @@ public class User extends AbstractEntity {
     @OneToMany(mappedBy = "user")
     private List<Submission> submissions;
 
+    @OneToMany(mappedBy = "teacher")
+    private List<Classroom> taughtClassrooms;
+
+    @ManyToMany(mappedBy = "students")
+    private List<Classroom> enrolledClassrooms;
+
     public User() {
     }
 
-    public User(String username, String password, String firstName, String lastName, String email, String profilePicture, UserType type, List<Submission> submissions) {
+    public User(String username, String password, String firstName, String lastName, String email, String profilePicture, UserType type, List<Submission> submissions, List<Classroom> taughtClassrooms, List<Classroom> enrolledClassrooms) {
         this.username = username;
         this.password = password;
         this.firstName = firstName;
@@ -49,6 +55,8 @@ public class User extends AbstractEntity {
         this.profilePicture = profilePicture;
         this.type = type;
         this.submissions = submissions;
+        this.taughtClassrooms = taughtClassrooms;
+        this.enrolledClassrooms = enrolledClassrooms;
     }
 
     public String getUsername() {
@@ -115,6 +123,30 @@ public class User extends AbstractEntity {
         this.submissions = submissions;
     }
 
+    public List<Submission> getSubmissions() {
+        return submissions;
+    }
+
+    public void setSubmissions(List<Submission> submissions) {
+        this.submissions = submissions;
+    }
+
+    public List<Classroom> getTaughtClassrooms() {
+        return taughtClassrooms;
+    }
+
+    public void setTaughtClassrooms(List<Classroom> taughtClassrooms) {
+        this.taughtClassrooms = taughtClassrooms;
+    }
+
+    public List<Classroom> getEnrolledClassrooms() {
+        return enrolledClassrooms;
+    }
+
+    public void setEnrolledClassrooms(List<Classroom> enrolledClassrooms) {
+        this.enrolledClassrooms = enrolledClassrooms;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -125,7 +157,9 @@ public class User extends AbstractEntity {
                 ", email='" + email + '\'' +
                 ", profilePicture='" + profilePicture + '\'' +
                 ", type=" + type +
-                ", solutions=" + submissions +
+                ", submissions=" + submissions +
+                ", taughtClassrooms=" + taughtClassrooms +
+                ", enrolledClassrooms=" + enrolledClassrooms +
                 '}';
     }
 }

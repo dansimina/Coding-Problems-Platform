@@ -19,6 +19,7 @@ import {
   Tab,
   Collapse,
   IconButton,
+  Tooltip,
 } from "@mui/material";
 import NavigationBar from "../components/NavigationBar";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -240,12 +241,27 @@ function ProblemDetailsPage() {
               </Box>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                 {problem.topics.map((topic) => (
-                  <Chip
+                  <Tooltip
                     key={topic.title}
-                    label={topic.title}
-                    size="small"
-                    variant="outlined"
-                  />
+                    title={topic.description || "No description available"}
+                    arrow
+                    placement="top"
+                    enterDelay={500}
+                    leaveDelay={200}
+                  >
+                    <Chip
+                      label={topic.title}
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        cursor: "pointer",
+                        "&:hover": {
+                          backgroundColor: "rgba(0, 0, 0, 0.08)",
+                          borderColor: "primary.main",
+                        },
+                      }}
+                    />
+                  </Tooltip>
                 ))}
               </Box>
             </Box>
