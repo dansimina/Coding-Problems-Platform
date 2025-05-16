@@ -41,7 +41,7 @@ function AddTopicPage() {
     setError("");
 
     try {
-      await api.post("/admin/topic", formData);
+      await api.post("/topic/save", formData);
       setSuccess(true);
       setFormData({
         title: "",

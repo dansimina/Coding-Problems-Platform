@@ -10,11 +10,12 @@ import AddProblemPage from "./pages/AddProblemPage";
 import AddTopicPage from "./pages/AddTopicPage";
 import AuthPage from "./pages/AuthPage";
 // Import classroom-related pages
-import CreateClassroomPage from "./pages/CreateClassroomPage";
+import CreateClassroomPage from "./pages/AddClassroomPage";
 import ClassroomsPage from "./pages/ClassroomsPage";
 import ClassroomDetailsPage from "./pages/ClassroomDetailsPage";
 // Import new homework-related page
-import CreateHomeworkPage from "./pages/CreateHomeworkPage";
+import CreateHomeworkPage from "./pages/AddHomeworkPage";
+import UserProfilePage from "./pages/UserProfilePage";
 
 const theme = createTheme({
   palette: {
@@ -145,6 +146,12 @@ function App() {
           <Route path="/" element={<MainPage />} />
           <Route path="/problems" element={<ProblemsPage />} />
           <Route path="/problems/:id" element={<ProblemDetailsPage />} />
+          <Route path="/classrooms" element={<ClassroomsPage />} />
+          <Route
+            path="/classroom/:classroomId"
+            element={<ClassroomDetailsPage />}
+          />
+          <Route path="/profile/:id" element={<UserProfilePage />} />
           <Route
             path="/login"
             element={
@@ -177,16 +184,6 @@ function App() {
             }
           />
 
-          {/* Teacher & Admin Routes */}
-          <Route
-            path="/classrooms"
-            element={
-              <ProtectedRoute
-                element={<ClassroomsPage />}
-                allowedRoles={["teacher", "admin"]}
-              />
-            }
-          />
           <Route
             path="/add-classroom"
             element={
@@ -196,15 +193,7 @@ function App() {
               />
             }
           />
-          <Route
-            path="/classroom/:classroomId"
-            element={
-              <ProtectedRoute
-                element={<ClassroomDetailsPage />}
-                allowedRoles={["teacher", "admin"]}
-              />
-            }
-          />
+
           <Route
             path="/edit-classroom/:id"
             element={

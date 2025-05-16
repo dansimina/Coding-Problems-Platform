@@ -40,6 +40,7 @@ import PeopleIcon from "@mui/icons-material/People";
 
 function ClassroomsPage() {
   const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
   const [classrooms, setClassrooms] = useState<ClassroomDTO[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
@@ -52,28 +53,54 @@ function ClassroomsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    // Check if user is teacher or admin
+    // Load user from localStorage
     const storedUser = localStorage.getItem("user");
     if (!storedUser || storedUser === "null") {
-      navigate("/");
+      navigate("/login");
       return;
     }
 
-    const user = JSON.parse(storedUser);
-    if (user.type !== "teacher" && user.type !== "admin") {
-      navigate("/");
-      return;
-    }
+    const parsedUser = JSON.parse(storedUser);
+    setUser(parsedUser);
 
-    fetchClassrooms(user.id);
+    // Debug information
+    console.log("User loaded:", parsedUser);
+    console.log("User role:", parsedUser.type); // Most likely using 'type' instead of 'role'
+
+    // Only fetch classrooms after we have a user
+    fetchClassrooms(parsedUser);
   }, [navigate]);
 
-  const fetchClassrooms = async (teacherId: number) => {
+  const fetchClassrooms = async (currentUser: any) => {
+    if (!currentUser || !currentUser.id) {
+      console.error("Cannot fetch classrooms: User or user.id is undefined");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
+
     try {
-      const response = await api.get(`/teacher/classrooms/${teacherId}`);
-      setClassrooms(response.data);
+      console.log("Fetching classrooms for user type:", currentUser.type);
+
+      // Using type instead of role to match your App.tsx roles setup
+      if (currentUser.type === "admin" || currentUser.type === "teacher") {
+        const response = await api.get(
+          `/classroom/all/teacher/${currentUser.id}`
+        );
+        setClassrooms(response.data);
+      } else if (currentUser.type === "student") {
+        const response = await api.get(
+          `/classroom/all/student/${currentUser.id}`
+        );
+        setClassrooms(response.data);
+      } else {
+        // Handle user role (this could be the missing case)
+        const response = await api.get(
+          `/classroom/all/student/${currentUser.id}`
+        );
+        setClassrooms(response.data);
+      }
     } catch (error) {
       console.error("Error fetching classrooms:", error);
       setError("Failed to load classrooms. Please try again later.");
@@ -83,7 +110,12 @@ function ClassroomsPage() {
   };
 
   const handleCreateClassroom = () => {
-    navigate("/add-classroom");
+    // Check if user is teacher or admin before allowing classroom creation
+    if (user && (user.type === "teacher" || user.type === "admin")) {
+      navigate("/add-classroom");
+    } else {
+      setError("Only teachers and administrators can create classrooms.");
+    }
   };
 
   const handleViewStudents = (classroom: ClassroomDTO) => {
@@ -105,15 +137,20 @@ function ClassroomsPage() {
   };
 
   const handleDeleteClassroom = (classroom: ClassroomDTO) => {
-    setSelectedClassroom(classroom);
-    setDeleteDialogOpen(true);
+    // Only allow teachers and admins to delete
+    if (user && (user.type === "teacher" || user.type === "admin")) {
+      setSelectedClassroom(classroom);
+      setDeleteDialogOpen(true);
+    } else {
+      setError("Only teachers and administrators can delete classrooms.");
+    }
   };
 
   const confirmDeleteClassroom = async () => {
     if (!selectedClassroom) return;
 
     try {
-      await api.delete(`/teacher/classroom/${selectedClassroom.id}`);
+      await api.delete(`/classroom/${selectedClassroom.id}`);
       setClassrooms(classrooms.filter((c) => c.id !== selectedClassroom.id));
       setDeleteDialogOpen(false);
     } catch (error) {
@@ -127,8 +164,34 @@ function ClassroomsPage() {
   };
 
   const handleEditClassroom = (classroom: ClassroomDTO) => {
-    navigate(`/edit-classroom/${classroom.id}`);
+    // Only allow teachers and admins to edit
+    if (user && (user.type === "teacher" || user.type === "admin")) {
+      navigate(`/edit-classroom/${classroom.id}`);
+    } else {
+      setError("Only teachers and administrators can edit classrooms.");
+    }
   };
+
+  // Render UI only when user is available
+  if (!user) {
+    return (
+      <Box
+        sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+      >
+        <NavigationBar />
+        <Container
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            flexGrow: 1,
+          }}
+        >
+          <CircularProgress />
+        </Container>
+      </Box>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -166,14 +229,20 @@ function ClassroomsPage() {
           <Typography variant="h4" component="h1" fontWeight="bold">
             My Classrooms
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleCreateClassroom}
-            sx={{ borderRadius: 2, textTransform: "none", fontWeight: "bold" }}
-          >
-            Create Classroom
-          </Button>
+          {(user.type === "teacher" || user.type === "admin") && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleCreateClassroom}
+              sx={{
+                borderRadius: 2,
+                textTransform: "none",
+                fontWeight: "bold",
+              }}
+            >
+              Create Classroom
+            </Button>
+          )}
         </Box>
 
         {error && (
@@ -195,16 +264,20 @@ function ClassroomsPage() {
               No classrooms found
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-              Create your first classroom to start teaching coding!
+              {user.type === "teacher" || user.type === "admin"
+                ? "Create your first classroom to start teaching coding!"
+                : "You are not enrolled in any classrooms yet."}
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={handleCreateClassroom}
-              sx={{ borderRadius: 2, textTransform: "none" }}
-            >
-              Create Classroom
-            </Button>
+            {(user.type === "teacher" || user.type === "admin") && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleCreateClassroom}
+                sx={{ borderRadius: 2, textTransform: "none" }}
+              >
+                Create Classroom
+              </Button>
+            )}
           </Paper>
         ) : (
           <Grid container spacing={3}>
@@ -254,16 +327,22 @@ function ClassroomsPage() {
                       </Typography>
                     </Box>
 
-                    <Tooltip title="View enrollment key" arrow>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => handleShowEnrollmentKey(classroom)}
-                        sx={{ borderRadius: 1.5, textTransform: "none", mt: 1 }}
-                      >
-                        Show Enrollment Key
-                      </Button>
-                    </Tooltip>
+                    {(user.type === "teacher" || user.type === "admin") && (
+                      <Tooltip title="View enrollment key" arrow>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => handleShowEnrollmentKey(classroom)}
+                          sx={{
+                            borderRadius: 1.5,
+                            textTransform: "none",
+                            mt: 1,
+                          }}
+                        >
+                          Show Enrollment Key
+                        </Button>
+                      </Tooltip>
+                    )}
                   </CardContent>
 
                   <Divider />
@@ -278,22 +357,26 @@ function ClassroomsPage() {
                           <PeopleIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Edit classroom">
-                        <IconButton
-                          onClick={() => handleEditClassroom(classroom)}
-                          color="primary"
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete classroom">
-                        <IconButton
-                          onClick={() => handleDeleteClassroom(classroom)}
-                          color="error"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
+                      {(user.type === "teacher" || user.type === "admin") && (
+                        <>
+                          <Tooltip title="Edit classroom">
+                            <IconButton
+                              onClick={() => handleEditClassroom(classroom)}
+                              color="primary"
+                            >
+                              <EditIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete classroom">
+                            <IconButton
+                              onClick={() => handleDeleteClassroom(classroom)}
+                              color="error"
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </>
+                      )}
                     </Box>
 
                     <Button
@@ -303,7 +386,7 @@ function ClassroomsPage() {
                       onClick={() => handleClassroomDetails(classroom)}
                       sx={{ borderRadius: 1.5, textTransform: "none" }}
                     >
-                      Manage
+                      View
                     </Button>
                   </CardActions>
                 </Card>

@@ -83,7 +83,7 @@ function ProblemDetailsPage() {
       setIsLoading(true);
       setError("");
       try {
-        const response = await api.get(`/problems/${id}`);
+        const response = await api.get(`/problem/${id}`);
         setProblem(response.data);
       } catch (error) {
         console.error("Error fetching problem details:", error);

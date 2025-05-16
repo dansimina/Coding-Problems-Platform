@@ -1,6 +1,7 @@
 package org.example.backend.business.logic;
 
 import org.example.backend.data.access.ClassroomRepository;
+import org.example.backend.data.access.UserRepository;
 import org.example.backend.dto.ClassroomDTO;
 import org.example.backend.dto.HomeworkDTO;
 import org.example.backend.mappers.ClassroomMapper;
@@ -20,6 +21,8 @@ public class ClassroomService {
 
     @Autowired
     private HomeworkMapper homeworkMapper;
+    @Autowired
+    private UserRepository userRepository;
 
     public ClassroomDTO save(ClassroomDTO classroom) {
         return classroomMapper.toDTO(classroomRepository.save(classroomMapper.toEntity(classroom)));
@@ -35,5 +38,9 @@ public class ClassroomService {
 
     public List<HomeworkDTO> getHomeworksByClassroomId(Long classroomId) {
         return homeworkMapper.toDTO(classroomRepository.findById(classroomId).get().getHomeworks());
+    }
+
+    public List<ClassroomDTO> findByStudentId(Long studentId) {
+        return classroomMapper.toDTO(userRepository.findById(studentId).get().getEnrolledClassrooms());
     }
 }

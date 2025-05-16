@@ -10,4 +10,5 @@ import java.util.List;
 public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     List<Submission> findByUserIdAndProblemIdOrderByIdDesc(Long userId, Long problemId);
     List<Submission> findByProblemIdOrderByIdDesc(Long problemId);
+    List<Submission> findByUserIdOrderBySubmittedAtDesc(Long userId);
 }

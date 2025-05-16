@@ -85,7 +85,7 @@ function SubmissionComponent({ problemId }: SubmissionComponentProps) {
       };
 
       const response = await api.post<SubmissionDTO>(
-        "/user/submit",
+        "/submission/submit",
         submissionData
       );
       setSubmission(response.data);

@@ -49,8 +49,8 @@ function ProblemsPage() {
       setError("");
       try {
         const [problemsResponse, topicsResponse] = await Promise.all([
-          api.get("/problems"),
-          api.get("/topics"),
+          api.get("/problem/all"),
+          api.get("/topic/all"),
         ]);
         setProblems(problemsResponse.data);
         setFilteredProblems(problemsResponse.data);

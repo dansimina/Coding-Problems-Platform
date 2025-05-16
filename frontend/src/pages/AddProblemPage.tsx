@@ -62,7 +62,7 @@ function AddProblemPage() {
     // Fetch available topics when component mounts
     const fetchTopics = async () => {
       try {
-        const response = await api.get("/admin/topics");
+        const response = await api.get("/topic/all");
         setAvailableTopics(response.data);
       } catch (error) {
         console.error("Error fetching topics:", error);
@@ -195,7 +195,7 @@ function AddProblemPage() {
     setError("");
 
     try {
-      await api.post("/admin/problem", formData);
+      await api.post("/problem/save", formData);
       setSuccess(true);
 
       // Reset form after successful submission

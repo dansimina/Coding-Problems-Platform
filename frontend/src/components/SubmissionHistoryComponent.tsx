@@ -49,9 +49,7 @@ function SubmissionHistoryComponent({ problemId }: SubmissionHistoryProps) {
     const user = JSON.parse(storedUser);
 
     try {
-      const response = await api.get(
-        `/user/submissions/${user.id}/${problemId}`
-      );
+      const response = await api.get(`/submission/all/${user.id}/${problemId}`);
       setSubmissions(response.data);
     } catch (error) {
       console.error("Error fetching submissions:", error);

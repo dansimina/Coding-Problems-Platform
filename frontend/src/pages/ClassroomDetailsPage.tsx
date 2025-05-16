@@ -53,6 +53,7 @@ function TabPanel(props: TabPanelProps) {
 function ClassroomDetailsPage() {
   const { classroomId } = useParams<{ classroomId: string }>();
   const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
   const [classroom, setClassroom] = useState<ClassroomDTO | null>(null);
   const [homeworks, setHomeworks] = useState<HomeworkDTO[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -60,23 +61,21 @@ function ClassroomDetailsPage() {
   const [tabValue, setTabValue] = useState(0);
 
   useEffect(() => {
-    // Check if user is teacher or admin
+    // Check if user is logged in
     const storedUser = localStorage.getItem("user");
     if (!storedUser || storedUser === "null") {
-      navigate("/");
+      navigate("/login");
       return;
     }
 
-    const user = JSON.parse(storedUser);
-    if (user.type !== "teacher" && user.type !== "admin") {
-      navigate("/");
-      return;
-    }
+    const parsedUser = JSON.parse(storedUser);
+    setUser(parsedUser);
+    console.log("User type:", parsedUser.type);
 
-    if (!classroomId) return; //changed 'id' to 'classroomId'
+    if (!classroomId) return;
 
     fetchClassroomDetails();
-  }, [classroomId, navigate]); //changed 'id' to 'classroomId'
+  }, [classroomId, navigate]);
 
   const fetchClassroomDetails = async () => {
     setIsLoading(true);
@@ -84,14 +83,12 @@ function ClassroomDetailsPage() {
 
     try {
       // Fetch classroom details
-      const classroomResponse = await api.get(
-        `/teacher/classroom/${classroomId}`
-      ); //changed 'id' to 'classroomId'
+      const classroomResponse = await api.get(`/classroom/${classroomId}`);
       setClassroom(classroomResponse.data);
 
       // Fetch homeworks for this classroom
       const homeworksResponse = await api.get(
-        `/teacher/classroom/${classroomId}/homeworks` //changed 'id' to 'classroomId'
+        `/classroom/${classroomId}/homeworks`
       );
       setHomeworks(homeworksResponse.data);
     } catch (error) {
@@ -122,6 +119,21 @@ function ClassroomDetailsPage() {
     navigate("/classrooms");
   };
 
+  // Check if the user is authorized to view this classroom
+  const checkUserAuthorization = () => {
+    if (!user || !classroom) return false;
+
+    // Admins and teachers have full access
+    if (user.type === "admin" || user.type === "teacher") return true;
+
+    // For students, check if they are enrolled in this classroom
+    if (user.type === "student" || user.type === "user") {
+      return classroom.students?.some((student) => student.id === user.id);
+    }
+
+    return false;
+  };
+
   if (isLoading) {
     return (
       <Box
@@ -138,6 +150,29 @@ function ClassroomDetailsPage() {
           }}
         >
           <CircularProgress />
+        </Container>
+      </Box>
+    );
+  }
+
+  // Added this check to see if the user is authorized
+  if (!isLoading && user && classroom && !checkUserAuthorization()) {
+    return (
+      <Box
+        sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+      >
+        <NavigationBar />
+        <Container sx={{ mt: 5, px: 4 }}>
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={handleBack}
+            sx={{ mb: 3 }}
+          >
+            Back to Classrooms
+          </Button>
+          <Alert severity="error" sx={{ px: 3, py: 2 }}>
+            You do not have permission to view this classroom.
+          </Alert>
         </Container>
       </Box>
     );
@@ -164,6 +199,9 @@ function ClassroomDetailsPage() {
       </Box>
     );
   }
+
+  const isTeacherOrAdmin =
+    user && (user.type === "teacher" || user.type === "admin");
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -259,9 +297,11 @@ function ClassroomDetailsPage() {
                 <Typography variant="body1" color="text.secondary">
                   No students enrolled in this classroom yet.
                 </Typography>
-                <Typography variant="body2" sx={{ mt: 2 }}>
-                  Share the enrollment key with your students to get started.
-                </Typography>
+                {isTeacherOrAdmin && (
+                  <Typography variant="body2" sx={{ mt: 2 }}>
+                    Share the enrollment key with your students to get started.
+                  </Typography>
+                )}
               </Box>
             ) : (
               <List sx={{ px: 2 }}>
@@ -303,14 +343,16 @@ function ClassroomDetailsPage() {
               <Typography variant="h6" fontWeight="bold">
                 Assignments
               </Typography>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={handleAddHomework}
-                sx={{ borderRadius: 2, textTransform: "none" }}
-              >
-                Add Assignment
-              </Button>
+              {isTeacherOrAdmin && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={handleAddHomework}
+                  sx={{ borderRadius: 2, textTransform: "none" }}
+                >
+                  Add Assignment
+                </Button>
+              )}
             </Box>
 
             {homeworks.length === 0 ? (
@@ -318,10 +360,12 @@ function ClassroomDetailsPage() {
                 <Typography variant="body1" color="text.secondary">
                   No assignments created for this classroom yet.
                 </Typography>
-                <Typography variant="body2" sx={{ mt: 2 }}>
-                  Create assignments to give your students coding problems to
-                  solve.
-                </Typography>
+                {isTeacherOrAdmin && (
+                  <Typography variant="body2" sx={{ mt: 2 }}>
+                    Create assignments to give your students coding problems to
+                    solve.
+                  </Typography>
+                )}
               </Box>
             ) : (
               <Grid container spacing={3}>
@@ -376,7 +420,9 @@ function ClassroomDetailsPage() {
                           onClick={() => handleNavigateToHomework(homework.id!)}
                           sx={{ borderRadius: 1.5, textTransform: "none" }}
                         >
-                          View Details
+                          {isTeacherOrAdmin
+                            ? "View Details"
+                            : "Start Assignment"}
                         </Button>
                       </CardContent>
                     </Card>

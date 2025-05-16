@@ -63,7 +63,7 @@ function AllSubmissionsComponent({ problemId }: AllSubmissionsProps) {
 
     try {
       // This endpoint needs to be implemented in the backend
-      const response = await api.get(`/admin/submissions/problem/${problemId}`);
+      const response = await api.get(`/submission/all/problem/${problemId}`);
       setSubmissions(response.data);
     } catch (error) {
       console.error("Error fetching all submissions:", error);

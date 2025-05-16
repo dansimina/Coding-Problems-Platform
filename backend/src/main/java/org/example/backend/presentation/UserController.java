@@ -1,11 +1,9 @@
 package org.example.backend.presentation;
 
-import org.example.backend.business.logic.ProblemService;
-import org.example.backend.business.logic.SubmissionService;
-import org.example.backend.dto.NewSubmissionDTO;
-import org.example.backend.dto.SubmissionDTO;
+import org.example.backend.business.logic.UserService;
+import org.example.backend.dto.UserDTO;
+import org.example.backend.mappers.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,18 +13,15 @@ import java.util.List;
 @RequestMapping("/api/user")
 public class UserController {
     @Autowired
-    private ProblemService problemService;
+    private UserService userService;
 
-    @Autowired
-    private SubmissionService submissionService;
-
-    @PostMapping("/submit")
-    public ResponseEntity<SubmissionDTO> submit(@RequestBody NewSubmissionDTO submission) {
-        return new ResponseEntity<>(submissionService.submit(submission), HttpStatus.CREATED);
+    @GetMapping("/student/all")
+    public ResponseEntity<List<UserDTO>> getStudents() {
+        return ResponseEntity.ok(userService.getByType("student"));
     }
 
-    @GetMapping("/submissions/{userId}/{problemId}")
-    public ResponseEntity<List<SubmissionDTO>> getUserSubmissionsForProblem(@PathVariable Long userId, @PathVariable Long problemId) {
-        return ResponseEntity.ok(submissionService.findByUserAndProblem(userId, problemId));
+    @GetMapping("/{id}")
+    public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.findById(id));
     }
 }

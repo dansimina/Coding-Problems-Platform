@@ -86,4 +86,12 @@ public class UserService {
     public List<UserDTO> getByUsername(String username) {
         return userMapper.toDTO(userRepository.findUsersByUsername(username).orElse(Collections.emptyList()));
     }
+
+    public UserDTO findById(Long id) {
+        User user = userRepository.findById(id).orElse(null);
+        if (user != null) {
+            user.setPassword(null);
+        }
+        return userMapper.toDTO(user);
+    }
 }
