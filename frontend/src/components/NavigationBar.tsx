@@ -42,8 +42,6 @@ function NavigationBar() {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTeacherOrAdmin =
-    user && (user.type === "teacher" || user.type === "admin");
 
   // Load user from localStorage on component mount
   useEffect(() => {
@@ -86,7 +84,12 @@ function NavigationBar() {
         navigate("/add-topic");
         break;
       case "profile":
-        navigate("/profile");
+        // Navigate to profile with user ID if available
+        if (user && user.id) {
+          navigate(`/profile/${user.id}`);
+        } else {
+          navigate("/");
+        }
         break;
       case "classrooms":
         navigate("/classrooms");
@@ -122,8 +125,27 @@ function NavigationBar() {
       </MenuItem>
     );
 
+    // Add Classrooms menu item for ALL users
+    items.push(
+      <MenuItem
+        key="classrooms"
+        onClick={() => handleMenuClick("classrooms")}
+        sx={{
+          borderRadius: 1,
+          m: 0.5,
+          "&:hover": { bgcolor: "action.hover" },
+        }}
+      >
+        <ListItemIcon>
+          <ClassIcon color="primary" />
+        </ListItemIcon>
+        <ListItemText primary="My Classrooms" />
+      </MenuItem>
+    );
+
     // Admin-only items
     if (user?.type === "admin") {
+      items.push(<Divider key="admin-divider" sx={{ my: 1 }} />);
       items.push(
         <MenuItem
           key="addProblem"
@@ -155,27 +177,6 @@ function NavigationBar() {
             <CategoryIcon color="primary" />
           </ListItemIcon>
           <ListItemText primary="Add new topic" />
-        </MenuItem>
-      );
-    }
-
-    // Teacher or Admin items
-    if (isTeacherOrAdmin) {
-      items.push(<Divider key="divider" sx={{ my: 1 }} />);
-      items.push(
-        <MenuItem
-          key="classrooms"
-          onClick={() => handleMenuClick("classrooms")}
-          sx={{
-            borderRadius: 1,
-            m: 0.5,
-            "&:hover": { bgcolor: "action.hover" },
-          }}
-        >
-          <ListItemIcon>
-            <ClassIcon color="primary" />
-          </ListItemIcon>
-          <ListItemText primary="My Classrooms" />
         </MenuItem>
       );
     }
@@ -366,21 +367,20 @@ function NavigationBar() {
                     <ListItemText primary="My Profile" />
                   </MenuItem>
 
-                  {isTeacherOrAdmin && (
-                    <MenuItem
-                      onClick={() => handleMenuClick("classrooms")}
-                      sx={{
-                        borderRadius: 1,
-                        m: 0.5,
-                        "&:hover": { bgcolor: "action.hover" },
-                      }}
-                    >
-                      <ListItemIcon>
-                        <ClassIcon fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText primary="My Classrooms" />
-                    </MenuItem>
-                  )}
+                  {/* My Classrooms menu item in user dropdown for ALL users */}
+                  <MenuItem
+                    onClick={() => handleMenuClick("classrooms")}
+                    sx={{
+                      borderRadius: 1,
+                      m: 0.5,
+                      "&:hover": { bgcolor: "action.hover" },
+                    }}
+                  >
+                    <ListItemIcon>
+                      <ClassIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText primary="My Classrooms" />
+                  </MenuItem>
 
                   <MenuItem
                     onClick={handleLogout}

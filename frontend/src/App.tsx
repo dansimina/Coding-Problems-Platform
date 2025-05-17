@@ -13,8 +13,9 @@ import AuthPage from "./pages/AuthPage";
 import CreateClassroomPage from "./pages/AddClassroomPage";
 import ClassroomsPage from "./pages/ClassroomsPage";
 import ClassroomDetailsPage from "./pages/ClassroomDetailsPage";
-// Import new homework-related page
+// Import homework-related pages
 import CreateHomeworkPage from "./pages/AddHomeworkPage";
+import HomeworkDetailsPage from "./pages/HomeworkDetailsPage";
 import UserProfilePage from "./pages/UserProfilePage";
 
 const theme = createTheme({
@@ -163,6 +164,12 @@ function App() {
             }
           />
 
+          {/* Homework routes */}
+          <Route
+            path="/homework/:homeworkId"
+            element={<HomeworkDetailsPage />}
+          />
+
           {/* Protected Routes */}
           {/* Admin Routes */}
           <Route
@@ -204,7 +211,7 @@ function App() {
             }
           />
 
-          {/* New route for adding homework */}
+          {/* Route for adding homework */}
           <Route
             path="/add-homework/:classroomId"
             element={
