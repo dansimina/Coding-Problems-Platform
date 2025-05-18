@@ -38,4 +38,9 @@ public class HomeworkController {
     public ResponseEntity<List<HomeworkStatusDTO>> getStatusOfStudentsHomework(@PathVariable Long id) {
         return ResponseEntity.ok(homeworkService.getStatusOfStudentsHomework(id));
     }
+
+    @GetMapping("/status/student/{studentId}/homework/{homeworkId}")
+    public ResponseEntity<HomeworkStatusDTO> getStatusOfStudentHomework(@PathVariable Long studentId, @PathVariable Long homeworkId) {
+        return ResponseEntity.ok(homeworkService.getStatusOfStudentHomework(studentId, homeworkId));
+    }
 }

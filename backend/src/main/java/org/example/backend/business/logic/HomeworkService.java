@@ -1,9 +1,6 @@
 package org.example.backend.business.logic;
 
-import org.example.backend.data.access.ClassroomRepository;
-import org.example.backend.data.access.HomeworkRepository;
-import org.example.backend.data.access.ProblemRepository;
-import org.example.backend.data.access.SubmissionRepository;
+import org.example.backend.data.access.*;
 import org.example.backend.dto.HomeworkDTO;
 import org.example.backend.dto.HomeworkStatusDTO;
 import org.example.backend.dto.NewHomeworkDTO;
@@ -39,6 +36,8 @@ public class HomeworkService {
 
     @Autowired
     private SubmissionMapper submissionMapper;
+    @Autowired
+    private UserRepository userRepository;
 
     public HomeworkDTO createHomework(NewHomeworkDTO newHomeworkDTO) {
         Classroom classroom = classroomRepository.findById(newHomeworkDTO.classroomDTO().id()).orElse(null);
@@ -103,6 +102,68 @@ public class HomeworkService {
 
     public HomeworkDTO findHomeworkById(Long id) {
         return homeworkMapper.toDTO(homeworkRepository.findById(id).orElse(null));
+    }
+
+    public HomeworkStatusDTO getStatusOfStudentHomework(Long studentId, Long homeworkId) {
+        Homework homework = homeworkRepository.findById(homeworkId).orElse(null);
+        if (homework == null) {
+            return null;
+        }
+
+        User student = userRepository.findById(studentId).orElse(null);
+        if (student == null) {
+            return null;
+        }
+
+        // Verify that the student belongs to the homework's classroom
+        Classroom classroom = homework.getClassroom();
+        if (!classroom.getStudents().contains(student)) {
+            return null;
+        }
+
+        List<Problem> problems = homework.getProblems();
+
+        // Prepare IDs
+        List<Long> problemIds = problems.stream().map(Problem::getId).toList();
+        LocalDateTime deadline = homework.getDeadline();
+
+        // Fetch all relevant submissions for this student in one go
+        List<Submission> studentSubmissions = submissionRepository.findByUserIdsAndProblemIdsAndDeadline(
+                Collections.singletonList(studentId), problemIds, deadline);
+
+        // Find best submission for each problem
+        Map<Long, Submission> bestSubmissions = new HashMap<>();
+        for (Submission s : studentSubmissions) {
+            bestSubmissions.merge(
+                    s.getProblem().getId(),
+                    s,
+                    (existing, candidate) -> {
+                        if (candidate.getScore() > existing.getScore()) return candidate;
+                        if (candidate.getScore().equals(existing.getScore()) &&
+                                candidate.getSubmittedAt().isAfter(existing.getSubmittedAt()))
+                            return candidate;
+                        return existing;
+                    }
+            );
+        }
+
+        // Calculate total score and collect best submissions
+        Integer total = 0;
+        List<Submission> bestStudentSubmissions = new ArrayList<>();
+        for (Problem problem : problems) {
+            Submission submission = bestSubmissions.get(problem.getId());
+            if (submission != null) {
+                total += submission.getScore();
+                bestStudentSubmissions.add(submission);
+            }
+        }
+
+        // Build and return the DTO
+        return new HomeworkStatusDTO(
+                userMapper.toDTO(student),
+                submissionMapper.toDTO(bestStudentSubmissions),
+                total
+        );
     }
 
     public List<HomeworkStatusDTO> getStatusOfStudentsHomework(Long homeworkId) {
