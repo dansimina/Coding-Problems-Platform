@@ -36,7 +36,10 @@ import { HomeworkDTO } from "../types/HomeworkDTO";
 import { NewHomeworkDTO } from "../types/NewHomeworkDTO";
 
 function CreateHomeworkPage() {
-  const { classroomId } = useParams<{ classroomId: string }>();
+  const { classroomId, homeworkId } = useParams<{
+    classroomId: string;
+    homeworkId: string;
+  }>();
   const navigate = useNavigate();
   const [classroom, setClassroom] = useState<ClassroomDTO | null>(null);
   const [availableProblems, setAvailableProblems] = useState<ProblemDTO[]>([]);
@@ -71,6 +74,7 @@ function CreateHomeworkPage() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
 
   useEffect(() => {
     // Check if user is teacher or admin
@@ -91,8 +95,13 @@ function CreateHomeworkPage() {
       return;
     }
 
+    // Check if we're in edit mode
+    if (homeworkId) {
+      setIsEditMode(true);
+    }
+
     fetchClassroomAndProblems();
-  }, [classroomId, navigate]);
+  }, [classroomId, homeworkId, navigate]);
 
   const fetchClassroomAndProblems = async () => {
     setIsLoading(true);
@@ -106,6 +115,49 @@ function CreateHomeworkPage() {
       // Fetch available problems
       const problemsResponse = await api.get("/problem/all");
       setAvailableProblems(problemsResponse.data);
+
+      // If homeworkId is provided, we're in edit mode regardless of the state variable
+      if (homeworkId) {
+        console.log("Fetching homework with ID:", homeworkId);
+        try {
+          const homeworkResponse = await api.get(`/homework/${homeworkId}`);
+          console.log("Homework data received:", homeworkResponse.data);
+          const homework = homeworkResponse.data;
+
+          // Set form data
+          setFormData({
+            id: homework.id,
+            title: homework.title,
+            description: homework.description,
+            deadline: homework.deadline,
+            problems: homework.problems || [],
+          });
+
+          // Set date and time
+          const deadlineDate = new Date(homework.deadline);
+          setDate(formatDateForInput(deadlineDate));
+          setTime(formatTimeForInput(deadlineDate));
+
+          // Set selected problems
+          if (homework.problems && homework.problems.length > 0) {
+            setSelectedProblems(homework.problems);
+            setSelectedProblemIds(
+              homework.problems.map((problem: { id: any }) =>
+                String(problem.id)
+              )
+            );
+          }
+          console.log("Form data updated:", {
+            title: homework.title,
+            description: homework.description,
+            deadline: homework.deadline,
+            problemsCount: (homework.problems || []).length,
+          });
+        } catch (fetchError) {
+          console.error("Error fetching homework details:", fetchError);
+          setError("Failed to load homework details. Please try again later.");
+        }
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
       setError("Failed to load classroom or problems. Please try again later.");
@@ -136,16 +188,12 @@ function CreateHomeworkPage() {
 
   const updateDeadline = (newDate: string, newTime: string) => {
     try {
-      // Construct a date object using the browser's local timezone
-      const deadlineDate = new Date(`${newDate}T${newTime}`);
-
-      if (isNaN(deadlineDate.getTime())) {
-        throw new Error("Invalid date or time");
-      }
+      // Store the date and time exactly as entered, without timezone conversion
+      const exactDateTimeString = `${newDate}T${newTime}:00`;
 
       setFormData((prev) => ({
         ...prev,
-        deadline: deadlineDate.toISOString(),
+        deadline: exactDateTimeString,
       }));
     } catch (error) {
       console.error("Error updating deadline:", error);
@@ -200,14 +248,6 @@ function CreateHomeworkPage() {
       return;
     }
 
-    // Validate deadline is in the future
-    const deadlineDate = new Date(formData.deadline);
-    const now = new Date();
-    if (deadlineDate <= now) {
-      setError("Deadline must be in the future.");
-      return;
-    }
-
     setIsSubmitting(true);
     setError("");
 
@@ -217,14 +257,28 @@ function CreateHomeworkPage() {
         homeworkDTO: formData as HomeworkDTO,
       };
 
-      await api.post("/homework/save", newHomeworkDTO);
+      if (isEditMode) {
+        // If in edit mode, use PUT request to update
+        await api.post("/homework/save", newHomeworkDTO);
+      } else {
+        // If in create mode, use POST request to save
+        await api.post("/homework/save", newHomeworkDTO);
+      }
+
       console.log(newHomeworkDTO.homeworkDTO.problems);
 
       // Redirect to classroom details page after successful submission
       navigate(`/classroom/${classroomId}`);
     } catch (error) {
-      console.error("Error creating homework:", error);
-      setError("Failed to create homework. Please try again.");
+      console.error(
+        `Error ${isEditMode ? "updating" : "creating"} homework:`,
+        error
+      );
+      setError(
+        `Failed to ${
+          isEditMode ? "update" : "create"
+        } homework. Please try again.`
+      );
       setIsSubmitting(false);
     }
   };
@@ -287,7 +341,7 @@ function CreateHomeworkPage() {
             gutterBottom
             sx={{ fontWeight: "bold" }}
           >
-            Create New Assignment
+            {isEditMode ? "Edit Assignment" : "Create New Assignment"}
           </Typography>
 
           {classroom && (
@@ -296,7 +350,8 @@ function CreateHomeworkPage() {
               color="text.secondary"
               sx={{ mb: 4 }}
             >
-              Adding assignment to: <strong>{classroom.name}</strong>
+              {isEditMode ? "Editing" : "Adding"} assignment for:{" "}
+              <strong>{classroom.name}</strong>
             </Typography>
           )}
 
@@ -511,6 +566,8 @@ function CreateHomeworkPage() {
                 >
                   {isSubmitting ? (
                     <CircularProgress size={24} color="inherit" />
+                  ) : isEditMode ? (
+                    "Update Assignment"
                   ) : (
                     "Create Assignment"
                   )}

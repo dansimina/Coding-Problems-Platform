@@ -43,4 +43,9 @@ public class HomeworkController {
     public ResponseEntity<HomeworkStatusDTO> getStatusOfStudentHomework(@PathVariable Long studentId, @PathVariable Long homeworkId) {
         return ResponseEntity.ok(homeworkService.getStatusOfStudentHomework(studentId, homeworkId));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> delete(@PathVariable Long id) {
+        return ResponseEntity.ok("Deleted homework: " + homeworkService.findHomeworkById(id));
+    }
 }

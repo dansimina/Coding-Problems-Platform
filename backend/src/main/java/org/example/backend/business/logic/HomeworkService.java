@@ -229,4 +229,12 @@ public class HomeworkService {
 
         return homeworkStatusDTO;
     }
+
+    public void delete(Long homeworkId) {
+        Homework homework = homeworkRepository.findById(homeworkId).orElse(null);
+        if(homework != null) {
+            homework.getProblems().clear();
+            homeworkRepository.delete(homework);
+        }
+    }
 }

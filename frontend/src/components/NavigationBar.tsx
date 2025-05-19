@@ -27,8 +27,10 @@ import CategoryIcon from "@mui/icons-material/Category";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ClassIcon from "@mui/icons-material/Class";
-import PersonSearchIcon from "@mui/icons-material/PersonSearch"; // New import for icon
+import PersonSearchIcon from "@mui/icons-material/PersonSearch";
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh"; // Import the AutoFixHigh icon for GeminiAI
 import LoginDialog from "./LoginDialog";
+import GeminiAIDialog from "./GeminiAIDialog"; // Import the GeminiAIDialog component
 import { useNavigate } from "react-router-dom";
 
 function NavigationBar() {
@@ -40,6 +42,7 @@ function NavigationBar() {
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(
     null
   );
+  const [geminiAIDialogOpen, setGeminiAIDialogOpen] = useState(false); // State for GeminiAI dialog
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -73,6 +76,11 @@ function NavigationBar() {
     setLoginOpen(false);
   };
 
+  // Toggle the GeminiAI dialog
+  const toggleGeminiAIDialog = () => {
+    setGeminiAIDialogOpen(!geminiAIDialogOpen);
+  };
+
   const handleMenuClick = (option: string) => {
     switch (option) {
       case "problems":
@@ -83,6 +91,9 @@ function NavigationBar() {
         break;
       case "addTopic":
         navigate("/add-topic");
+        break;
+      case "topics":
+        navigate("/topics");
         break;
       case "profile":
         // Navigate to profile with user ID if available
@@ -98,7 +109,7 @@ function NavigationBar() {
       case "addClassroom":
         navigate("/add-classroom");
         break;
-      case "users": // New case for users page
+      case "users":
         navigate("/users");
         break;
       default:
@@ -189,8 +200,8 @@ function NavigationBar() {
 
       items.push(
         <MenuItem
-          key="addTopic"
-          onClick={() => handleMenuClick("addTopic")}
+          key="topics"
+          onClick={() => handleMenuClick("topics")}
           sx={{
             borderRadius: 1,
             m: 0.5,
@@ -200,7 +211,7 @@ function NavigationBar() {
           <ListItemIcon>
             <CategoryIcon color="primary" />
           </ListItemIcon>
-          <ListItemText primary="Add new topic" />
+          <ListItemText primary="Manage Topics" />
         </MenuItem>
       );
     }
@@ -294,12 +305,38 @@ function NavigationBar() {
           </Box>
 
           {/* Right section with user profile or login */}
-          <Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            {/* GeminiAI Button - Only visible for logged-in users */}
+            {user && (
+              <Tooltip title="Ask GeminiAI">
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  startIcon={<AutoFixHighIcon />}
+                  onClick={toggleGeminiAIDialog}
+                  sx={{
+                    borderRadius: 8,
+                    px: 2,
+                    background:
+                      "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
+                    color: "white",
+                    boxShadow: "0 3px 5px 2px rgba(33, 203, 243, .3)",
+                    textTransform: "none",
+                    fontWeight: "bold",
+                    "&:hover": {
+                      background:
+                        "linear-gradient(45deg, #1976D2 30%, #00B0FF 90%)",
+                    },
+                  }}
+                >
+                  {!isMobile && "Ask GeminiAI"}
+                </Button>
+              </Tooltip>
+            )}
+
             {user ? (
               // User is logged in
               <Box sx={{ display: "flex", alignItems: "center" }}>
-                {/* Find Users button for logged-in users */}
-
                 <Tooltip title="Account settings">
                   <Box
                     onClick={(event) => setUserMenuAnchor(event.currentTarget)}
@@ -437,6 +474,12 @@ function NavigationBar() {
         open={loginOpen}
         onClose={closeLoginDialog}
         onLoginSuccess={handleLoginSuccess}
+      />
+
+      {/* GeminiAI Dialog Component */}
+      <GeminiAIDialog
+        open={geminiAIDialogOpen}
+        onClose={() => setGeminiAIDialogOpen(false)}
       />
     </>
   );

@@ -35,7 +35,14 @@ public class ProblemService {
     @Transactional
     public ProblemDTO save(ProblemDTO problemDTO) throws Exception {
         // Convert to entity
-        Problem problem = new Problem();
+        Problem problem;
+        if(problemDTO.id() == null) {
+            problem = new Problem();
+        }
+        else {
+            problem = problemRepository.findById(problemDTO.id()).get();
+        }
+
         problem.setTitle(problemDTO.title());
         problem.setAuthor(problemDTO.author());
         problem.setDescription(problemDTO.description());

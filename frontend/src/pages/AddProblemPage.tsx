@@ -28,10 +28,13 @@ import { TopicDTO } from "../types/TopicDTO";
 import { TestCaseDTO } from "../types/TestCaseDTO";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 function AddProblemPage() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEditMode = !!id;
+
   const [formData, setFormData] = useState<ProblemDTO>({
     id: null,
     title: "",
@@ -56,10 +59,25 @@ function AddProblemPage() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingData, setIsFetchingData] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
-    // Fetch available topics when component mounts
+    // Check if user is admin (only admins can add/edit problems)
+    const storedUser = localStorage.getItem("user");
+    if (!storedUser || storedUser === "null") {
+      navigate("/");
+      return;
+    }
+
+    const user = JSON.parse(storedUser);
+    if (user.type !== "admin") {
+      navigate("/");
+      return;
+    }
+
+    // Fetch available topics
     const fetchTopics = async () => {
       try {
         const response = await api.get("/topic/all");
@@ -72,16 +90,53 @@ function AddProblemPage() {
 
     fetchTopics();
 
-    // Pre-fill author with current user's name if available
-    const storedUser = localStorage.getItem("user");
-    if (storedUser && storedUser !== "null") {
+    // Pre-fill author with current user's name if available and not in edit mode
+    if (!isEditMode) {
       const user = JSON.parse(storedUser);
       setFormData((prev) => ({
         ...prev,
         author: `${user.firstName} ${user.lastName}`,
       }));
     }
-  }, []);
+
+    // If in edit mode, fetch problem data
+    if (isEditMode && id) {
+      fetchProblemData(id);
+    }
+  }, [navigate, isEditMode, id]);
+
+  const fetchProblemData = async (problemId: string) => {
+    setIsFetchingData(true);
+    setError("");
+
+    try {
+      const response = await api.get(`/problem/${problemId}`);
+      const problemData = response.data;
+
+      // Update form with problem data
+      setFormData({
+        ...problemData,
+      });
+
+      // Set selected topics
+      if (problemData.topics && problemData.topics.length > 0) {
+        const topicTitles = problemData.topics.map(
+          (topic: TopicDTO) => topic.title
+        );
+        setSelectedTopics(topicTitles);
+      }
+
+      // Set preview image if exists
+      if (problemData.image) {
+        setPreviewImage(problemData.image);
+      }
+    } catch (error) {
+      console.error("Error fetching problem data:", error);
+      setError("Failed to load problem data. Please try again later.");
+    } finally {
+      setIsFetchingData(false);
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -196,38 +251,57 @@ function AddProblemPage() {
 
     try {
       await api.post("/problem/save", formData);
+
+      // Set success message based on mode
+      setSuccessMessage(
+        isEditMode
+          ? "Problem updated successfully!"
+          : "Problem added successfully!"
+      );
       setSuccess(true);
 
-      // Reset form after successful submission
-      setFormData({
-        id: null,
-        title: "",
-        author: "",
-        description: "",
-        constraints: "",
-        difficulty: "medium",
-        image: null,
-        tests: [],
-        topics: [],
-        officialSolution: null,
-      });
-      setSelectedTopics([]);
-      setPreviewImage(null);
+      if (!isEditMode) {
+        // Reset form after successful submission for new problems
+        setFormData({
+          id: null,
+          title: "",
+          author: "",
+          description: "",
+          constraints: "",
+          difficulty: "medium",
+          image: null,
+          tests: [],
+          topics: [],
+          officialSolution: null,
+        });
+        setSelectedTopics([]);
+        setPreviewImage(null);
 
-      // Keep the author field with current user's name
-      const storedUser = localStorage.getItem("user");
-      if (storedUser && storedUser !== "null") {
-        const user = JSON.parse(storedUser);
-        setFormData((prev) => ({
-          ...prev,
-          author: `${user.firstName} ${user.lastName}`,
-        }));
+        // Keep the author field with current user's name
+        const storedUser = localStorage.getItem("user");
+        if (storedUser && storedUser !== "null") {
+          const user = JSON.parse(storedUser);
+          setFormData((prev) => ({
+            ...prev,
+            author: `${user.firstName} ${user.lastName}`,
+          }));
+        }
+      } else {
+        // For edit mode, navigate back to problems page after success
+        setTimeout(() => {
+          navigate("/problems");
+        }, 2000);
       }
     } catch (error: any) {
-      console.error("Error adding problem:", error);
+      console.error(
+        `Error ${isEditMode ? "updating" : "adding"} problem:`,
+        error
+      );
       setError(
         error.response?.data?.message ||
-          "Failed to add problem. Please try again."
+          `Failed to ${
+            isEditMode ? "update" : "add"
+          } problem. Please try again.`
       );
     } finally {
       setIsLoading(false);
@@ -237,6 +311,27 @@ function AddProblemPage() {
   const handleCloseSnackbar = () => {
     setSuccess(false);
   };
+
+  // Display loading state when fetching problem data
+  if (isFetchingData) {
+    return (
+      <Box
+        sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+      >
+        <NavigationBar />
+        <Container
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            flexGrow: 1,
+          }}
+        >
+          <CircularProgress />
+        </Container>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -257,7 +352,7 @@ function AddProblemPage() {
             variant="h5"
             sx={{ mb: 3, fontWeight: "bold" }}
           >
-            Add New Problem
+            {isEditMode ? "Edit Problem" : "Add New Problem"}
           </Typography>
 
           <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
@@ -552,6 +647,8 @@ function AddProblemPage() {
               >
                 {isLoading ? (
                   <CircularProgress size={24} color="inherit" />
+                ) : isEditMode ? (
+                  "Update Problem"
                 ) : (
                   "Add Problem"
                 )}
@@ -565,7 +662,7 @@ function AddProblemPage() {
         open={success}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        message="Problem added successfully"
+        message={successMessage}
       />
     </Box>
   );

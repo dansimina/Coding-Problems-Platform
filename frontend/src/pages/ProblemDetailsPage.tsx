@@ -84,7 +84,23 @@ function ProblemDetailsPage() {
       setError("");
       try {
         const response = await api.get(`/problem/${id}`);
-        setProblem(response.data);
+
+        // Check if user is teacher or admin
+        if (user && (user.type === "teacher" || user.type === "admin")) {
+          // Teachers and admins can see all test cases
+          setProblem(response.data);
+        } else {
+          // Students should only see example test cases
+          const problemData = { ...response.data };
+          // Filter the tests to only include examples
+
+          console.log(problemData.tests);
+
+          problemData.tests = problemData.tests.filter(
+            (test: { example: boolean }) => test.example
+          );
+          setProblem(problemData);
+        }
       } catch (error) {
         console.error("Error fetching problem details:", error);
         setError("Failed to load problem details. Please try again later.");

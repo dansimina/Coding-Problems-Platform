@@ -20,17 +20,20 @@ import {
   OutlinedInput,
 } from "@mui/material";
 import NavigationBar from "../components/NavigationBar";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ClassroomDTO } from "../types/ClassroomDTO";
 import { UserDTO } from "../types/UserDTO";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 
 function CreateClassroomPage() {
+  const { id: classroomId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation(); // Add this to debug the current route
+
   const [formData, setFormData] = useState<Partial<ClassroomDTO>>({
     id: null,
     name: "",
-    descrition: "", // Note: There's a typo in your ClassroomDTO interface
+    description: "",
     enrollmentKey: "",
     students: [],
   });
@@ -38,9 +41,23 @@ function CreateClassroomPage() {
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingData, setIsFetchingData] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
+  // Debug log to see path and params
   useEffect(() => {
+    console.log("Current path:", location.pathname);
+    console.log("ClassroomId param:", classroomId);
+
+    // Check if we're in edit mode
+    if (classroomId) {
+      console.log("Edit mode detected, classroom ID:", classroomId);
+      setIsEditMode(true);
+      // Immediately set isFetchingData to true to show loading state
+      setIsFetchingData(true);
+    }
+
     // Check if user is teacher or admin
     const storedUser = localStorage.getItem("user");
     if (!storedUser || storedUser === "null") {
@@ -59,19 +76,76 @@ function CreateClassroomPage() {
       ...prev,
       teacher: user,
     }));
+  }, [classroomId, navigate, location]);
 
-    const fetchStudents = async () => {
+  // Fetch students and classroom data
+  useEffect(() => {
+    const fetchData = async () => {
       try {
+        // Fetch all students
         const response = await api.get("/user/student/all");
         setStudents(response.data || []);
+        console.log("Students fetched:", response.data?.length || 0);
       } catch (error) {
         console.error("Error fetching students:", error);
         setError("Failed to load students. Please refresh the page.");
       }
+
+      // If classroomId is provided, fetch classroom data (edit mode)
+      if (isEditMode && classroomId) {
+        try {
+          console.log("Starting to fetch classroom data for ID:", classroomId);
+          const response = await api.get(`/classroom/${classroomId}`);
+          const classroomData = response.data;
+
+          // Debug output
+          console.log("Raw classroom data:", JSON.stringify(classroomData));
+
+          if (!classroomData) {
+            throw new Error("No classroom data received");
+          }
+
+          // Update form data with the fetched classroom data
+          setFormData({
+            id: classroomData.id,
+            name: classroomData.name || "",
+            description: classroomData.description || "",
+            enrollmentKey: classroomData.enrollmentKey || "",
+            students: classroomData.students || [],
+            teacher: classroomData.teacher,
+          });
+
+          // Set selected students
+          if (classroomData.students && classroomData.students.length > 0) {
+            const studentUsernames = classroomData.students.map(
+              (student: UserDTO) => student.username
+            );
+            setSelectedStudents(studentUsernames);
+            console.log("Selected students set:", studentUsernames);
+          }
+
+          console.log("Form data updated successfully:", {
+            id: classroomData.id,
+            name: classroomData.name || "",
+            description: classroomData.description || "",
+            enrollmentKey: classroomData.enrollmentKey || "",
+            studentsCount: (classroomData.students || []).length,
+          });
+        } catch (error) {
+          console.error("Error fetching classroom data:", error);
+          setError("Failed to load classroom data. Please try again.");
+        } finally {
+          setIsFetchingData(false);
+        }
+      } else {
+        setIsFetchingData(false);
+      }
     };
 
-    fetchStudents();
-  }, [navigate]);
+    fetchData();
+  }, [isEditMode, classroomId]);
+
+  // Rest of the component code remains the same...
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -104,29 +178,49 @@ function CreateClassroomPage() {
     setError("");
 
     try {
-      await api.post("/classroom/save", formData);
-      setSuccess(true);
+      if (isEditMode) {
+        // Update existing classroom
+        console.log("Updating classroom with data:", formData);
 
-      // Reset form after successful submission
-      setFormData({
-        id: null,
-        name: "",
-        descrition: "",
-        enrollmentKey: "",
-        students: [],
-        teacher: formData.teacher, // Keep the current teacher
-      });
-      setSelectedStudents([]);
+        // Since there's no PUT endpoint in the original API, we use the same save endpoint
+        // You may need to modify this based on your actual API implementation
+        await api.post("/classroom/save", formData);
 
-      // Redirect to classrooms page after a short delay
-      setTimeout(() => {
-        navigate("/classrooms");
-      }, 2000);
+        setSuccess(true);
+        setTimeout(() => {
+          navigate("/classrooms");
+        }, 2000);
+      } else {
+        // Create new classroom
+        await api.post("/classroom/save", formData);
+        setSuccess(true);
+
+        // Reset form after successful submission
+        setFormData({
+          id: null,
+          name: "",
+          description: "",
+          enrollmentKey: "",
+          students: [],
+          teacher: formData.teacher, // Keep the current teacher
+        });
+        setSelectedStudents([]);
+
+        // Redirect to classrooms page after a short delay
+        setTimeout(() => {
+          navigate("/classrooms");
+        }, 2000);
+      }
     } catch (error: any) {
-      console.error("Error creating classroom:", error);
+      console.error(
+        `Error ${isEditMode ? "updating" : "creating"} classroom:`,
+        error
+      );
       setError(
         error.response?.data?.message ||
-          "Failed to create classroom. Please try again."
+          `Failed to ${
+            isEditMode ? "update" : "create"
+          } classroom. Please try again.`
       );
     } finally {
       setIsLoading(false);
@@ -151,11 +245,59 @@ function CreateClassroomPage() {
     }));
   };
 
+  // Display loading state when fetching classroom data
+  if (isFetchingData) {
+    return (
+      <Box
+        sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+      >
+        <NavigationBar />
+        <Container component="main" maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+          <Paper
+            elevation={3}
+            sx={{
+              p: 4,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 2,
+              minHeight: "300px",
+            }}
+          >
+            <Typography variant="h5" sx={{ mb: 3 }}>
+              Loading Classroom Data
+            </Typography>
+            <CircularProgress />
+          </Paper>
+        </Container>
+      </Box>
+    );
+  }
+
+  // Form display remains the same...
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <NavigationBar />
 
       <Container component="main" maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+        {/* Debug info - remove in production */}
+        <Box
+          sx={{
+            mb: 2,
+            p: 2,
+            bgcolor: "info.light",
+            color: "info.contrastText",
+            borderRadius: 1,
+          }}
+        >
+          <Typography variant="body2">
+            Mode: {isEditMode ? "Edit" : "Create"} | ID: {classroomId || "None"}{" "}
+            | Name: {formData.name || "Empty"} | Students:{" "}
+            {selectedStudents.length}
+          </Typography>
+        </Box>
+
         <Paper
           elevation={3}
           sx={{
@@ -170,12 +312,12 @@ function CreateClassroomPage() {
             variant="h5"
             sx={{ mb: 3, fontWeight: "bold" }}
           >
-            Create New Classroom
+            {isEditMode ? "Edit Classroom" : "Create New Classroom"}
           </Typography>
 
           <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
             <Stack spacing={3}>
-              {/* Classroom Name */}
+              {/* Form fields remain the same... */}
               <TextField
                 required
                 fullWidth
@@ -187,21 +329,19 @@ function CreateClassroomPage() {
                 placeholder="e.g., Web Development 101, Data Structures"
               />
 
-              {/* Classroom Description */}
               <TextField
                 required
                 fullWidth
-                id="descrition"
+                id="description"
                 label="Classroom Description"
-                name="descrition"
-                value={formData.descrition}
+                name="description"
+                value={formData.description}
                 onChange={handleChange}
                 multiline
                 rows={3}
                 placeholder="Provide a short description of your classroom"
               />
 
-              {/* Enrollment Key with Generate Button */}
               <Box sx={{ display: "flex", gap: 2 }}>
                 <TextField
                   required
@@ -223,7 +363,6 @@ function CreateClassroomPage() {
                 </Button>
               </Box>
 
-              {/* Student Selection */}
               <FormControl fullWidth>
                 <InputLabel id="students-label">
                   Add Students (Optional)
@@ -293,7 +432,7 @@ function CreateClassroomPage() {
                 disabled={
                   isLoading ||
                   !formData.name ||
-                  !formData.descrition ||
+                  !formData.description ||
                   !formData.enrollmentKey
                 }
                 sx={{
@@ -306,6 +445,8 @@ function CreateClassroomPage() {
               >
                 {isLoading ? (
                   <CircularProgress size={24} color="inherit" />
+                ) : isEditMode ? (
+                  "Update Classroom"
                 ) : (
                   "Create Classroom"
                 )}
@@ -319,7 +460,11 @@ function CreateClassroomPage() {
         open={success}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        message="Classroom created successfully! Redirecting..."
+        message={
+          isEditMode
+            ? "Classroom updated successfully! Redirecting..."
+            : "Classroom created successfully! Redirecting..."
+        }
       />
     </Box>
   );

@@ -18,6 +18,7 @@ import CreateHomeworkPage from "./pages/AddHomeworkPage";
 import HomeworkDetailsPage from "./pages/HomeworkDetailsPage";
 import UserProfilePage from "./pages/UserProfilePage";
 import UsersPage from "./pages/UsersPage";
+import TopicsPage from "./pages/TopicsPage";
 
 const theme = createTheme({
   palette: {
@@ -183,11 +184,39 @@ function App() {
               />
             }
           />
+          {/* New route for editing problems */}
+          <Route
+            path="/edit-problem/:id"
+            element={
+              <ProtectedRoute
+                element={<AddProblemPage />}
+                allowedRoles={["admin"]}
+              />
+            }
+          />
           <Route
             path="/add-topic"
             element={
               <ProtectedRoute
                 element={<AddTopicPage />}
+                allowedRoles={["admin"]}
+              />
+            }
+          />
+          <Route
+            path="/edit-topic/:id"
+            element={
+              <ProtectedRoute
+                element={<AddTopicPage />}
+                allowedRoles={["admin"]}
+              />
+            }
+          />
+          <Route
+            path="/topics"
+            element={
+              <ProtectedRoute
+                element={<TopicsPage />}
                 allowedRoles={["admin"]}
               />
             }
@@ -216,6 +245,26 @@ function App() {
           {/* Route for adding homework */}
           <Route
             path="/add-homework/:classroomId"
+            element={
+              <ProtectedRoute
+                element={<CreateHomeworkPage />}
+                allowedRoles={["teacher", "admin"]}
+              />
+            }
+          />
+
+          <Route
+            path="/add-homework/:classroomId"
+            element={
+              <ProtectedRoute
+                element={<CreateHomeworkPage />}
+                allowedRoles={["teacher", "admin"]}
+              />
+            }
+          />
+
+          <Route
+            path="/add-homework/:classroomId/:homeworkId"
             element={
               <ProtectedRoute
                 element={<CreateHomeworkPage />}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../api";
 import { TopicDTO } from "../types/TopicDTO";
 import {
@@ -13,17 +13,66 @@ import {
   Snackbar,
 } from "@mui/material";
 import NavigationBar from "../components/NavigationBar";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 function AddTopicPage() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEditMode = !!id;
+
   const [formData, setFormData] = useState<TopicDTO>({
     title: "",
     description: "",
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    // Check if user is admin
+    const storedUser = localStorage.getItem("user");
+    if (!storedUser || storedUser === "null") {
+      navigate("/");
+      return;
+    }
+
+    const user = JSON.parse(storedUser);
+    if (user.type !== "admin") {
+      navigate("/");
+      return;
+    }
+
+    // If in edit mode, fetch the topic data
+    if (isEditMode && id) {
+      fetchTopicData(id);
+    }
+  }, [id, navigate, isEditMode]);
+
+  const fetchTopicData = async (topicId: string) => {
+    setIsInitialLoading(true);
+    try {
+      // This is a workaround since there's no direct endpoint to get a single topic
+      // In a real app, you would have an endpoint like /topic/{id}
+      const response = await api.get("/topic/all");
+      const topics = response.data;
+      const topic = topics.find((t: TopicDTO) => t.id === Number(topicId));
+
+      if (topic) {
+        setFormData(topic);
+      } else {
+        setError("Topic not found");
+      }
+    } catch (error: any) {
+      console.error("Error fetching topic:", error);
+      setError(
+        error.response?.data?.message ||
+          "Failed to load topic. Please try again."
+      );
+    } finally {
+      setIsInitialLoading(false);
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -43,15 +92,27 @@ function AddTopicPage() {
     try {
       await api.post("/topic/save", formData);
       setSuccess(true);
-      setFormData({
-        title: "",
-        description: "",
-      });
+
+      if (!isEditMode) {
+        // Only reset form in add mode, not edit mode
+        setFormData({
+          title: "",
+          description: "",
+        });
+      }
+
+      // After a short delay, redirect back to topics page
+      setTimeout(() => {
+        navigate("/topics");
+      }, 1500);
     } catch (error: any) {
-      console.error("Error adding topic:", error);
+      console.error(
+        `Error ${isEditMode ? "updating" : "adding"} topic:`,
+        error
+      );
       setError(
         error.response?.data?.message ||
-          "Failed to add topic. Please try again."
+          `Failed to ${isEditMode ? "update" : "add"} topic. Please try again.`
       );
     } finally {
       setIsLoading(false);
@@ -61,6 +122,26 @@ function AddTopicPage() {
   const handleCloseSnackbar = () => {
     setSuccess(false);
   };
+
+  if (isInitialLoading) {
+    return (
+      <Box
+        sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+      >
+        <NavigationBar />
+        <Container
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            flexGrow: 1,
+          }}
+        >
+          <CircularProgress />
+        </Container>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -81,7 +162,7 @@ function AddTopicPage() {
             variant="h5"
             sx={{ mb: 3, fontWeight: "bold" }}
           >
-            Add New Topic
+            {isEditMode ? "Edit Topic" : "Add New Topic"}
           </Typography>
 
           <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
@@ -120,7 +201,7 @@ function AddTopicPage() {
             <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
               <Button
                 variant="outlined"
-                onClick={() => navigate(-1)}
+                onClick={() => navigate("/topics")}
                 disabled={isLoading}
               >
                 Cancel
@@ -139,6 +220,8 @@ function AddTopicPage() {
               >
                 {isLoading ? (
                   <CircularProgress size={24} color="inherit" />
+                ) : isEditMode ? (
+                  "Update Topic"
                 ) : (
                   "Add Topic"
                 )}
@@ -152,7 +235,9 @@ function AddTopicPage() {
         open={success}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        message="Topic added successfully"
+        message={
+          isEditMode ? "Topic updated successfully" : "Topic added successfully"
+        }
       />
     </Box>
   );

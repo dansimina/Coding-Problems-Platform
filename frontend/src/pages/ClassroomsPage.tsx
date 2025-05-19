@@ -95,7 +95,7 @@ function ClassroomsPage() {
       const filtered = classrooms.filter(
         (classroom) =>
           (classroom.name?.toLowerCase() || "").includes(lowercaseQuery) ||
-          (classroom.descrition?.toLowerCase() || "").includes(lowercaseQuery)
+          (classroom.description?.toLowerCase() || "").includes(lowercaseQuery)
       );
       setFilteredClassrooms(filtered);
     }
@@ -499,7 +499,7 @@ function ClassroomsPage() {
                       color="text.secondary"
                       sx={{ mb: 2 }}
                     >
-                      {classroom.descrition}
+                      {classroom.description}
                     </Typography>
 
                     <Box

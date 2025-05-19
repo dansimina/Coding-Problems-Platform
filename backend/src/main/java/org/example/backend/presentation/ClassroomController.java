@@ -18,7 +18,7 @@ public class ClassroomController {
     private ClassroomService classroomService;
 
     @PostMapping("/save")
-    public ResponseEntity<String> createClassroom(@RequestBody ClassroomDTO classroom) {
+    public ResponseEntity<String> save(@RequestBody ClassroomDTO classroom) {
         try {
             classroomService.save(classroom);
             return new ResponseEntity<>("Classroom created", HttpStatus.CREATED);
@@ -50,7 +50,7 @@ public class ClassroomController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteClassroom(@PathVariable Long id) {
-        classroomService.deleteById(id);
+        classroomService.delete(id);
         return new ResponseEntity<>("Classroom deleted", HttpStatus.OK);
     }
 

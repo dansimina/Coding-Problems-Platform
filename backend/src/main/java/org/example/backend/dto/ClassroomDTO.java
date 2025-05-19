@@ -5,7 +5,7 @@ import java.util.List;
 public record ClassroomDTO(
         Long id,
         String name,
-        String descrition,
+        String description,
         String enrollmentKey,
         UserDTO teacher,
         List<UserDTO> students

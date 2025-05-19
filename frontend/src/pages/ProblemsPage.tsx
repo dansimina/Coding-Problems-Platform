@@ -22,12 +22,14 @@ import {
   Alert,
   Stack,
   IconButton,
+  Tooltip,
 } from "@mui/material";
 import NavigationBar from "../components/NavigationBar";
 import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CodeIcon from "@mui/icons-material/Code";
 import ClearIcon from "@mui/icons-material/Clear";
+import EditIcon from "@mui/icons-material/Edit";
 import { ProblemDTO } from "../types/ProblemDTO";
 import { TopicDTO } from "../types/TopicDTO";
 import { useNavigate } from "react-router-dom";
@@ -41,9 +43,19 @@ function ProblemsPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Check if user is admin
+  const isAdmin = currentUser?.type === "admin";
 
   // Fetch problems and topics on component mount
   useEffect(() => {
+    // Load user from localStorage for admin check
+    const storedUser = localStorage.getItem("user");
+    if (storedUser && storedUser !== "null") {
+      setCurrentUser(JSON.parse(storedUser));
+    }
+
     const fetchData = async () => {
       setIsLoading(true);
       setError("");
@@ -107,6 +119,13 @@ function ProblemsPage() {
   const handleProblemClick = (problem: ProblemDTO) => {
     if (problem.id) {
       navigate(`/problems/${String(problem.id)}`);
+    }
+  };
+
+  const handleEditProblem = (problem: ProblemDTO, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent triggering the card click
+    if (problem.id) {
+      navigate(`/edit-problem/${String(problem.id)}`);
     }
   };
 
@@ -313,7 +332,9 @@ function ProblemsPage() {
                       transform: "translateY(-5px)",
                       boxShadow: 4,
                     },
+                    cursor: "pointer",
                   }}
+                  onClick={() => handleProblemClick(problem)}
                 >
                   <CardContent sx={{ flexGrow: 1 }}>
                     <Box
@@ -390,18 +411,40 @@ function ProblemsPage() {
                     <Typography variant="caption" color="text.secondary">
                       By: {problem.author}
                     </Typography>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      startIcon={<CodeIcon />}
-                      onClick={() => handleProblemClick(problem)}
-                      sx={{
-                        borderRadius: 1.5,
-                        textTransform: "none",
-                      }}
-                    >
-                      Solve
-                    </Button>
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      {isAdmin && (
+                        <Tooltip title="Edit Problem">
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="secondary"
+                            startIcon={<EditIcon />}
+                            onClick={(e) => handleEditProblem(problem, e)}
+                            sx={{
+                              borderRadius: 1.5,
+                              textTransform: "none",
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        </Tooltip>
+                      )}
+                      <Button
+                        size="small"
+                        variant="contained"
+                        startIcon={<CodeIcon />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleProblemClick(problem);
+                        }}
+                        sx={{
+                          borderRadius: 1.5,
+                          textTransform: "none",
+                        }}
+                      >
+                        Solve
+                      </Button>
+                    </Box>
                   </CardActions>
                 </Card>
               </Box>

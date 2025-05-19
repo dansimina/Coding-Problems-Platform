@@ -20,11 +20,17 @@ import {
   CardContent,
   Chip,
   Grid,
+  CardActions,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import NavigationBar from "../components/NavigationBar";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
 import { ClassroomDTO } from "../types/ClassroomDTO";
 import { HomeworkDTO } from "../types/HomeworkDTO";
 
@@ -59,6 +65,11 @@ function ClassroomDetailsPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [tabValue, setTabValue] = useState(0);
+  const [deleteHomeworkDialogOpen, setDeleteHomeworkDialogOpen] =
+    useState(false);
+  const [selectedHomeworkId, setSelectedHomeworkId] = useState<number | null>(
+    null
+  );
 
   useEffect(() => {
     // Check if user is logged in
@@ -113,6 +124,37 @@ function ClassroomDetailsPage() {
 
   const handleNavigateToHomework = (homeworkId: number) => {
     navigate(`/homework/${homeworkId}`);
+  };
+
+  const handleEditHomework = (homeworkId: number) => {
+    if (classroom && classroom.id) {
+      navigate(`/add-homework/${classroom.id}/${homeworkId}`);
+    }
+  };
+
+  const handleDeleteHomework = (homeworkId: number) => {
+    setSelectedHomeworkId(homeworkId);
+    setDeleteHomeworkDialogOpen(true);
+  };
+
+  const confirmDeleteHomework = async () => {
+    if (!selectedHomeworkId) return;
+
+    try {
+      // Call the API to delete the homework
+      await api.delete(`/homework/${selectedHomeworkId}`);
+
+      // Remove the deleted homework from the state
+      setHomeworks(homeworks.filter((hw) => hw.id !== selectedHomeworkId));
+
+      // Close the dialog
+      setDeleteHomeworkDialogOpen(false);
+      setSelectedHomeworkId(null);
+    } catch (error) {
+      console.error("Error deleting homework:", error);
+      setError("Failed to delete assignment. Please try again.");
+      setDeleteHomeworkDialogOpen(false);
+    }
   };
 
   const handleBack = () => {
@@ -224,11 +266,17 @@ function ClassroomDetailsPage() {
           <Box
             sx={{
               display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
+              flexDirection: "column",
+              gap: 2,
             }}
           >
-            <Box>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+              }}
+            >
               <Typography
                 variant="h4"
                 component="h1"
@@ -237,21 +285,60 @@ function ClassroomDetailsPage() {
               >
                 {classroom.name}
               </Typography>
-              <Typography variant="body1" color="text.secondary" paragraph>
-                {classroom.descrition}
+
+              {isTeacherOrAdmin && (
+                <Button
+                  variant="outlined"
+                  onClick={() => navigate(`/edit-classroom/${classroom.id}`)}
+                  startIcon={<EditIcon />}
+                  size="small"
+                >
+                  Edit Classroom
+                </Button>
+              )}
+            </Box>
+
+            {/* Description Section */}
+            <Box sx={{ mb: 2 }}>
+              <Typography
+                variant="subtitle1"
+                color="primary"
+                fontWeight="bold"
+                gutterBottom
+              >
+                Description
               </Typography>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Chip
-                  label={`${classroom.students?.length || 0} Students`}
-                  color="primary"
-                  variant="outlined"
-                />
-                <Chip
-                  label={`${homeworks.length} Assignments`}
-                  color="secondary"
-                  variant="outlined"
-                />
-              </Box>
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  bgcolor: "grey.50",
+                  borderRadius: 1,
+                }}
+              >
+                <Typography variant="body1">
+                  {classroom.description || "No description available"}
+                </Typography>
+              </Paper>
+            </Box>
+
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Chip
+                label={`${classroom.students?.length || 0} Students`}
+                color="primary"
+                variant="outlined"
+              />
+              <Chip
+                label={`${homeworks.length} Assignments`}
+                color="secondary"
+                variant="outlined"
+              />
+              <Chip
+                label={`Enrollment Key: ${classroom.enrollmentKey}`}
+                color="default"
+                variant="outlined"
+                sx={{ display: isTeacherOrAdmin ? "flex" : "none" }}
+              />
             </Box>
           </Box>
         </Paper>
@@ -414,16 +501,51 @@ function ClassroomDetailsPage() {
                           <strong>Deadline:</strong>{" "}
                           {new Date(homework.deadline).toLocaleString()}
                         </Typography>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => handleNavigateToHomework(homework.id!)}
-                          sx={{ borderRadius: 1.5, textTransform: "none" }}
-                        >
-                          {isTeacherOrAdmin
-                            ? "View Details"
-                            : "Start Assignment"}
-                        </Button>
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() =>
+                              handleNavigateToHomework(homework.id!)
+                            }
+                            sx={{ borderRadius: 1.5, textTransform: "none" }}
+                          >
+                            {isTeacherOrAdmin
+                              ? "View Details"
+                              : "Start Assignment"}
+                          </Button>
+
+                          {isTeacherOrAdmin && (
+                            <>
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                color="secondary"
+                                onClick={() => handleEditHomework(homework.id!)}
+                                sx={{
+                                  borderRadius: 1.5,
+                                  textTransform: "none",
+                                }}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                color="error"
+                                onClick={() =>
+                                  handleDeleteHomework(homework.id!)
+                                }
+                                sx={{
+                                  borderRadius: 1.5,
+                                  textTransform: "none",
+                                }}
+                              >
+                                Delete
+                              </Button>
+                            </>
+                          )}
+                        </Box>
                       </CardContent>
                     </Card>
                   </Grid>
@@ -432,6 +554,36 @@ function ClassroomDetailsPage() {
             )}
           </TabPanel>
         </Paper>
+
+        {/* Delete Homework Confirmation Dialog */}
+        <Dialog
+          open={deleteHomeworkDialogOpen}
+          onClose={() => setDeleteHomeworkDialogOpen(false)}
+        >
+          <DialogTitle>
+            <Typography variant="h6" fontWeight="bold">
+              Delete Assignment
+            </Typography>
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body1">
+              Are you sure you want to delete this assignment? This action
+              cannot be undone.
+            </Typography>
+            <Typography variant="body2" color="error" sx={{ mt: 2 }}>
+              All student submissions related to this assignment will also be
+              deleted.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteHomeworkDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmDeleteHomework} color="error">
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </Box>
   );

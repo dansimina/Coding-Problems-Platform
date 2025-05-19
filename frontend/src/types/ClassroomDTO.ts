@@ -3,7 +3,7 @@ import { UserDTO } from "./UserDTO";
 export interface ClassroomDTO {
   id: number | null;
   name: string;
-  descrition: string;
+  description: string;
   enrollmentKey: string;
   teacher: UserDTO;
   students: UserDTO[];

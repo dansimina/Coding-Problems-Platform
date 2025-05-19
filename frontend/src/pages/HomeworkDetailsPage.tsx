@@ -12,30 +12,20 @@ import {
   CircularProgress,
   Alert,
   Divider,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
   Avatar,
   Chip,
   Grid,
   Card,
   CardContent,
   CardActions,
-  IconButton,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Tooltip,
   Stack,
   LinearProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from "@mui/material";
 import NavigationBar from "../components/NavigationBar";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -45,7 +35,6 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
-import CloseIcon from "@mui/icons-material/Close";
 import { HomeworkDTO } from "../types/HomeworkDTO";
 import { HomeworkStatusDTO } from "../types/HomeworkStatusDTO";
 import { ClassroomDTO } from "../types/ClassroomDTO";
@@ -461,147 +450,144 @@ function HomeworkDetailsPage() {
                 No problems in this assignment.
               </Alert>
             ) : (
-              <Grid container spacing={3} sx={{ px: { xs: 1, sm: 2 } }}>
+              <Stack spacing={3} sx={{ px: { xs: 1, sm: 2 } }}>
                 {homework.problems.map((problem) => (
-                  <Grid item xs={12} md={6} key={problem.id}>
-                    <Card
-                      elevation={1}
-                      sx={{
-                        height: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                        transition: "transform 0.2s, box-shadow 0.2s",
-                        "&:hover": {
-                          transform: "translateY(-5px)",
-                          boxShadow: 4,
-                        },
-                      }}
-                    >
-                      <CardContent sx={{ flexGrow: 1 }}>
+                  <Card
+                    key={problem.id}
+                    elevation={1}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      transition: "transform 0.2s, box-shadow 0.2s",
+                      "&:hover": {
+                        transform: "translateY(-5px)",
+                        boxShadow: 4,
+                      },
+                    }}
+                  >
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          mb: 1,
+                        }}
+                      >
+                        <Typography
+                          variant="h6"
+                          component="h2"
+                          fontWeight="bold"
+                        >
+                          {problem.title}
+                        </Typography>
+                        <Chip
+                          size="small"
+                          label={problem.difficulty}
+                          color={getDifficultyColor(problem.difficulty)}
+                        />
+                      </Box>
+
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                          mb: 2,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          display: "-webkit-box",
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: "vertical",
+                        }}
+                      >
+                        {problem.description.substring(0, 150)}
+                        {problem.description.length > 150 ? "..." : ""}
+                      </Typography>
+
+                      <Box sx={{ mb: 1 }}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          component="div"
+                        >
+                          Topics:
+                        </Typography>
                         <Box
                           sx={{
                             display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "flex-start",
-                            mb: 1,
+                            flexWrap: "wrap",
+                            gap: 0.5,
+                            mt: 0.5,
                           }}
                         >
-                          <Typography
-                            variant="h6"
-                            component="h2"
-                            fontWeight="bold"
-                          >
-                            {problem.title}
-                          </Typography>
-                          <Chip
-                            size="small"
-                            label={problem.difficulty}
-                            color={getDifficultyColor(problem.difficulty)}
-                          />
+                          {problem.topics?.map((topic) => (
+                            <Chip
+                              key={topic.title}
+                              label={topic.title}
+                              size="small"
+                              variant="outlined"
+                            />
+                          ))}
                         </Box>
+                      </Box>
 
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{
-                            mb: 2,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 3,
-                            WebkitBoxOrient: "vertical",
-                          }}
-                        >
-                          {problem.description.substring(0, 150)}
-                          {problem.description.length > 150 ? "..." : ""}
-                        </Typography>
-
-                        <Box sx={{ mb: 1 }}>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            component="div"
-                          >
-                            Topics:
-                          </Typography>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexWrap: "wrap",
-                              gap: 0.5,
-                              mt: 0.5,
-                            }}
-                          >
-                            {problem.topics?.map((topic) => (
-                              <Chip
-                                key={topic.title}
-                                label={topic.title}
-                                size="small"
-                                variant="outlined"
-                              />
-                            ))}
-                          </Box>
+                      {/* Show status badge for student if they have submitted this problem */}
+                      {isStudent && studentStatus && (
+                        <Box sx={{ mt: 2 }}>
+                          {studentStatus.submissions.some(
+                            (submission) => submission.problem.id === problem.id
+                          ) ? (
+                            <Chip
+                              icon={<CheckCircleIcon />}
+                              label={
+                                studentStatus.submissions.find(
+                                  (submission) =>
+                                    submission.problem.id === problem.id
+                                )?.score === 100
+                                  ? "Completed"
+                                  : "Attempted"
+                              }
+                              color={
+                                studentStatus.submissions.find(
+                                  (submission) =>
+                                    submission.problem.id === problem.id
+                                )?.score === 100
+                                  ? "success"
+                                  : "warning"
+                              }
+                              size="small"
+                            />
+                          ) : (
+                            <Chip
+                              icon={<ErrorIcon />}
+                              label="Not Attempted"
+                              color="default"
+                              size="small"
+                            />
+                          )}
                         </Box>
+                      )}
+                    </CardContent>
 
-                        {/* Show status badge for student if they have submitted this problem */}
-                        {isStudent && studentStatus && (
-                          <Box sx={{ mt: 2 }}>
-                            {studentStatus.submissions.some(
-                              (submission) =>
-                                submission.problem.id === problem.id
-                            ) ? (
-                              <Chip
-                                icon={<CheckCircleIcon />}
-                                label={
-                                  studentStatus.submissions.find(
-                                    (submission) =>
-                                      submission.problem.id === problem.id
-                                  )?.score === 100
-                                    ? "Completed"
-                                    : "Attempted"
-                                }
-                                color={
-                                  studentStatus.submissions.find(
-                                    (submission) =>
-                                      submission.problem.id === problem.id
-                                  )?.score === 100
-                                    ? "success"
-                                    : "warning"
-                                }
-                                size="small"
-                              />
-                            ) : (
-                              <Chip
-                                icon={<ErrorIcon />}
-                                label="Not Attempted"
-                                color="default"
-                                size="small"
-                              />
-                            )}
-                          </Box>
-                        )}
-                      </CardContent>
+                    <Divider />
 
-                      <Divider />
-
-                      <CardActions sx={{ justifyContent: "flex-end", p: 2 }}>
-                        <Button
-                          size="small"
-                          variant="contained"
-                          startIcon={<CodeIcon />}
-                          onClick={() => handleViewProblem(problem.id)}
-                          sx={{
-                            borderRadius: 1.5,
-                            textTransform: "none",
-                          }}
-                        >
-                          Solve Problem
-                        </Button>
-                      </CardActions>
-                    </Card>
-                  </Grid>
+                    <CardActions sx={{ justifyContent: "flex-end", p: 2 }}>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        startIcon={<CodeIcon />}
+                        onClick={() => handleViewProblem(problem.id)}
+                        sx={{
+                          borderRadius: 1.5,
+                          textTransform: "none",
+                        }}
+                      >
+                        Solve Problem
+                      </Button>
+                    </CardActions>
+                  </Card>
                 ))}
-              </Grid>
+              </Stack>
             )}
           </TabPanel>
 
