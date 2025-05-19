@@ -8,7 +8,11 @@ import java.util.List;
 public class Problem extends AbstractEntity {
     private String title;
     private String author;
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String description;
+
     private String constraints;
     private String difficulty;
 

@@ -1,12 +1,19 @@
 package org.example.backend.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 
 @Entity
 public class TestCase extends AbstractEntity {
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String input;
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String output;
+
     private Boolean example;
 
     @ManyToOne

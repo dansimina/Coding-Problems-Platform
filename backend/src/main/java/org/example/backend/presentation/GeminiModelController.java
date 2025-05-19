@@ -1,6 +1,8 @@
 package org.example.backend.presentation;
 
+import org.example.backend.business.logic.ProblemService;
 import org.example.backend.business.logic.SubmissionService;
+import org.example.backend.dto.ProblemDTO;
 import org.example.backend.dto.SubmissionDTO;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,9 @@ public class GeminiModelController {
 
     @Autowired
     private SubmissionService submissionService;
+
+    @Autowired
+    private ProblemService problemService;
 
     public GeminiModelController(ChatClient.Builder chatClient) {
         this.chatClient = chatClient.build();
@@ -49,5 +54,33 @@ public class GeminiModelController {
         response.put("complexityAnalysis", result);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/generate-hint/{userId}/{problemId}")
+    public ResponseEntity<Map<String, String>> generateHint(@PathVariable long userId, @PathVariable long problemId) {
+        try {
+            SubmissionDTO submission = submissionService.lastSubmissionByUserIdAndProblemIdOrderBySubmittedAtDesc(userId, problemId);
+            ProblemDTO problem = problemService.findById(problemId);
+
+            String prompt = "You are a helpful programming tutor. Provide ONE specific hint for the student's code without giving away the complete solution.\n\n" +
+                    "Problem description: " + problem.description() + "\n\n" +
+                    "Constraints: " + problem.constraints() + "\n\n" +
+                    "Official solution (REFERENCE ONLY - DO NOT REVEAL THIS DIRECTLY): " + problem.officialSolution() + "\n\n" +
+                    "Student's current code: " + submission.code() + "\n\n" +
+                    "Guidelines:\n" +
+                    "1. Focus on their most critical issue\n" +
+                    "2. Be encouraging and specific\n" +
+                    "3. Keep your hint under 100 words\n" +
+                    "4. Help them understand the concept, not just fix the code";
+
+            String result = chatClient.prompt(prompt).call().content();
+
+            Map<String, String> response = new HashMap<>();
+            response.put("hint", result);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

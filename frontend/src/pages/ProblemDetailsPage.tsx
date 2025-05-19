@@ -139,24 +139,13 @@ function ProblemDetailsPage() {
     setIsGettingHint(true);
 
     try {
-      // TODO: Implement GeminiAI integration
-      // This function will be implemented in the future
-      // For now, just set a placeholder
-
-      // Example of what the implementation might look like:
-      // const response = await api.post('/gemini/hint', {
-      //   problemId: problem.id,
-      //   problemTitle: problem.title,
-      //   problemDescription: problem.description,
-      //   difficulty: problem.difficulty
-      // });
-      // setHint(response.data.hint);
+      const response = await api.post(
+        `/generate-hint/${user.id}/${problem.id}`
+      );
+      setHint(response.data.hint);
 
       // Placeholder for now
       setTimeout(() => {
-        setHint(
-          "This is where the AI-generated hint will appear. The hint will provide guidance without giving away the solution completely."
-        );
         setIsGettingHint(false);
       }, 1500);
     } catch (error) {

@@ -19,7 +19,7 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     SELECT s FROM Submission s
     WHERE s.user.id IN :userIds
       AND s.problem.id IN :problemIds
-      AND s.submittedAt <= :deadline
+      AND CAST(s.submittedAt AS timestamp) <= CAST(:deadline AS timestamp)
     """)
     List<Submission> findByUserIdsAndProblemIdsAndDeadline(
             @Param("userIds") List<Long> userIds,

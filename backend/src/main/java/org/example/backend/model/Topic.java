@@ -1,5 +1,6 @@
 package org.example.backend.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToMany;
 
@@ -8,6 +9,7 @@ import java.util.List;
 @Entity
 public class Topic extends AbstractEntity {
     private String title;
+    @Column(columnDefinition = "LONGTEXT")
     private String description;
 
     @ManyToMany(mappedBy = "topics")

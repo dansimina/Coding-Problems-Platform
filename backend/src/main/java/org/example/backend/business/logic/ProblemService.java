@@ -41,6 +41,9 @@ public class ProblemService {
         }
         else {
             problem = problemRepository.findById(problemDTO.id()).get();
+            testCaseRepository.deleteAll(problem.getTests());
+            problem.getTests().clear();
+            problemRepository.save(problem);
         }
 
         problem.setTitle(problemDTO.title());

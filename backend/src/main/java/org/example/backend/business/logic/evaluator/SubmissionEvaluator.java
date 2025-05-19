@@ -8,12 +8,17 @@ import java.util.List;
 @Component
 public class SubmissionEvaluator {
     public EvaluationResult evaluate(String code, String language, List<TestCaseDTO> testCases) {
-        switch (language) {
-            case "python":
-                Evaluator evaluator = new PhytonEvaluator();
-                return evaluator.evaluate(code, testCases);
-            default:
-                return null;
-        }
+        Evaluator evaluator;
+        return switch (language) {
+            case "python" -> {
+                evaluator = new PhytonEvaluator();
+                yield evaluator.evaluate(code, testCases);
+            }
+            case "cpp" -> {
+                evaluator = new CPPEvaluator();
+                yield evaluator.evaluate(code, testCases);
+            }
+            default -> null;
+        };
     }
 }

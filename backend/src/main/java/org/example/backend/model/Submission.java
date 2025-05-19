@@ -1,18 +1,21 @@
 package org.example.backend.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 public class Submission extends AbstractEntity {
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     String code;
+
     String language;
-    String report;
     Integer score;
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    String report;
 
     LocalDateTime submittedAt;
     @PrePersist
