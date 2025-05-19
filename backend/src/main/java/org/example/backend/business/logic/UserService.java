@@ -1,5 +1,6 @@
 package org.example.backend.business.logic;
 
+import jakarta.transaction.Transactional;
 import org.example.backend.business.logic.validators.PasswordValidator;
 import org.example.backend.business.logic.validators.UsernameValidator;
 import org.example.backend.business.logic.validators.Validator;
@@ -39,6 +40,7 @@ public class UserService {
         validators.add(new PasswordValidator());
     }
 
+    @Transactional
     public UserDTO login(LoginDTO loginDTO) {
         User user = userRepository.findByUsername(loginDTO.username()).orElse(null);
 
@@ -49,6 +51,7 @@ public class UserService {
         return null;
     }
 
+    @Transactional
     public UserDTO save(UserDTO userDTO) throws Exception {
         UserType userType = userTypeRepository.findByType(userDTO.type()).orElse(null);
 
@@ -83,15 +86,31 @@ public class UserService {
         return userMapper.toDTO(users);
     }
 
+    @Transactional
+    public UserDTO update(UserDTO userDTO) {
+        User user = userRepository.findById(userDTO.id()).orElse(null);
+        if(user != null) {
+            user.setFirstName(userDTO.firstName());
+            user.setLastName(userDTO.lastName());
+            user.setEmail(userDTO.email());
+            user.setProfilePicture(userDTO.profilePicture());
+            if(userDTO.password() != null) {
+                user.setPassword(passwordEncoder.encode(userDTO.password()));
+            }
+            userRepository.save(user);
+        }
+        return userMapper.toDTO(user);
+    }
+
     public List<UserDTO> getByUsername(String username) {
         return userMapper.toDTO(userRepository.findUsersByUsername(username).orElse(Collections.emptyList()));
     }
 
     public UserDTO findById(Long id) {
-        User user = userRepository.findById(id).orElse(null);
-        if (user != null) {
-            user.setPassword(null);
-        }
-        return userMapper.toDTO(user);
+        return userMapper.toDTO(userRepository.findById(id).orElse(null));
+    }
+
+    public List<UserDTO> findAll() {
+        return userMapper.toDTO(userRepository.findAll());
     }
 }

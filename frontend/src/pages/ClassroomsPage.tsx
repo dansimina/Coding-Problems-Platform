@@ -26,10 +26,13 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  InputAdornment,
+  Snackbar,
 } from "@mui/material";
 import NavigationBar from "../components/NavigationBar";
 import { useNavigate } from "react-router-dom";
 import { ClassroomDTO } from "../types/ClassroomDTO";
+import { EnrollDTO } from "../types/EnrollDTO";
 import AddIcon from "@mui/icons-material/Add";
 import GroupIcon from "@mui/icons-material/Group";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -37,11 +40,19 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PeopleIcon from "@mui/icons-material/People";
+import SearchIcon from "@mui/icons-material/Search";
+import ClearIcon from "@mui/icons-material/Clear";
+import SchoolIcon from "@mui/icons-material/School";
+import KeyIcon from "@mui/icons-material/Key";
 
 function ClassroomsPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [classrooms, setClassrooms] = useState<ClassroomDTO[]>([]);
+  const [filteredClassrooms, setFilteredClassrooms] = useState<ClassroomDTO[]>(
+    []
+  );
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [selectedClassroom, setSelectedClassroom] =
@@ -49,8 +60,12 @@ function ClassroomsPage() {
   const [studentsDialogOpen, setStudentsDialogOpen] = useState<boolean>(false);
   const [enrollmentKeyDialogOpen, setEnrollmentKeyDialogOpen] =
     useState<boolean>(false);
+  const [enrollDialogOpen, setEnrollDialogOpen] = useState<boolean>(false);
   const [copySuccess, setCopySuccess] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+  // Removed enrollmentKey state as it's now part of enrollmentFormData
+  const [enrollmentSuccess, setEnrollmentSuccess] = useState<boolean>(false);
+  const [enrollmentError, setEnrollmentError] = useState<string>("");
 
   useEffect(() => {
     // Load user from localStorage
@@ -71,6 +86,21 @@ function ClassroomsPage() {
     fetchClassrooms(parsedUser);
   }, [navigate]);
 
+  // Filter classrooms when search query changes
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredClassrooms(classrooms);
+    } else {
+      const lowercaseQuery = searchQuery.toLowerCase();
+      const filtered = classrooms.filter(
+        (classroom) =>
+          (classroom.name?.toLowerCase() || "").includes(lowercaseQuery) ||
+          (classroom.descrition?.toLowerCase() || "").includes(lowercaseQuery)
+      );
+      setFilteredClassrooms(filtered);
+    }
+  }, [searchQuery, classrooms]);
+
   const fetchClassrooms = async (currentUser: any) => {
     if (!currentUser || !currentUser.id) {
       console.error("Cannot fetch classrooms: User or user.id is undefined");
@@ -89,17 +119,20 @@ function ClassroomsPage() {
           `/classroom/all/teacher/${currentUser.id}`
         );
         setClassrooms(response.data);
+        setFilteredClassrooms(response.data);
       } else if (currentUser.type === "student") {
         const response = await api.get(
           `/classroom/all/student/${currentUser.id}`
         );
         setClassrooms(response.data);
+        setFilteredClassrooms(response.data);
       } else {
         // Handle user role (this could be the missing case)
         const response = await api.get(
           `/classroom/all/student/${currentUser.id}`
         );
         setClassrooms(response.data);
+        setFilteredClassrooms(response.data);
       }
     } catch (error) {
       console.error("Error fetching classrooms:", error);
@@ -107,6 +140,14 @@ function ClassroomsPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
   };
 
   const handleCreateClassroom = () => {
@@ -152,6 +193,9 @@ function ClassroomsPage() {
     try {
       await api.delete(`/classroom/${selectedClassroom.id}`);
       setClassrooms(classrooms.filter((c) => c.id !== selectedClassroom.id));
+      setFilteredClassrooms(
+        filteredClassrooms.filter((c) => c.id !== selectedClassroom.id)
+      );
       setDeleteDialogOpen(false);
     } catch (error) {
       console.error("Error deleting classroom:", error);
@@ -169,6 +213,73 @@ function ClassroomsPage() {
       navigate(`/edit-classroom/${classroom.id}`);
     } else {
       setError("Only teachers and administrators can edit classrooms.");
+    }
+  };
+
+  // State for enrollment form
+  const [enrollmentFormData, setEnrollmentFormData] = useState({
+    classroomID: "",
+    key: "",
+  });
+
+  // Open the enrollment dialog for students
+  const handleOpenEnrollDialog = () => {
+    setEnrollmentFormData({
+      classroomID: "",
+      key: "",
+    });
+    setEnrollmentError("");
+    setEnrollDialogOpen(true);
+  };
+
+  // Handle enrollment form changes
+  const handleEnrollmentFormChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name, value } = e.target;
+    setEnrollmentFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Handle the enrollment process
+  const handleEnroll = async () => {
+    if (!user) return;
+
+    if (!enrollmentFormData.classroomID || !enrollmentFormData.key) {
+      setEnrollmentError("Both classroom ID and enrollment key are required");
+      return;
+    }
+
+    try {
+      const enrollData: EnrollDTO = {
+        classroomID: parseInt(enrollmentFormData.classroomID),
+        userId: user.id,
+        key: enrollmentFormData.key,
+      };
+
+      await api.post("/classroom/enroll", enrollData);
+
+      // Refresh the classroom list
+      fetchClassrooms(user);
+
+      // Show success message
+      setEnrollmentSuccess(true);
+      setEnrollDialogOpen(false);
+
+      // Clear form
+      setEnrollmentFormData({
+        classroomID: "",
+        key: "",
+      });
+      setEnrollmentError("");
+    } catch (error: any) {
+      console.error("Error enrolling in classroom:", error);
+      setEnrollmentError(
+        error.response?.data ||
+          "Failed to enroll in classroom. Please check the classroom ID and enrollment key and try again."
+      );
     }
   };
 
@@ -229,21 +340,76 @@ function ClassroomsPage() {
           <Typography variant="h4" component="h1" fontWeight="bold">
             My Classrooms
           </Typography>
-          {(user.type === "teacher" || user.type === "admin") && (
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={handleCreateClassroom}
-              sx={{
-                borderRadius: 2,
-                textTransform: "none",
-                fontWeight: "bold",
-              }}
-            >
-              Create Classroom
-            </Button>
-          )}
+          <Box sx={{ display: "flex", gap: 2 }}>
+            {/* Enroll button for students */}
+            {user.type === "student" && (
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={<SchoolIcon />}
+                onClick={() => handleOpenEnrollDialog()}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: "none",
+                  fontWeight: "bold",
+                }}
+              >
+                Enroll in Classroom
+              </Button>
+            )}
+
+            {/* Create classroom button for teachers/admins */}
+            {(user.type === "teacher" || user.type === "admin") && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleCreateClassroom}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: "none",
+                  fontWeight: "bold",
+                }}
+              >
+                Create Classroom
+              </Button>
+            )}
+          </Box>
         </Box>
+
+        {/* Search Bar */}
+        <Paper elevation={2} sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+          <TextField
+            fullWidth
+            placeholder="Search classrooms by name or description..."
+            variant="outlined"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+              },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" />
+                </InputAdornment>
+              ),
+              endAdornment: searchQuery && (
+                <InputAdornment position="end">
+                  <IconButton
+                    size="small"
+                    onClick={handleClearSearch}
+                    edge="end"
+                    aria-label="clear search"
+                  >
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Paper>
 
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>
@@ -251,7 +417,7 @@ function ClassroomsPage() {
           </Alert>
         )}
 
-        {classrooms.length === 0 ? (
+        {filteredClassrooms.length === 0 ? (
           <Paper
             sx={{
               p: 5,
@@ -261,27 +427,50 @@ function ClassroomsPage() {
             }}
           >
             <Typography variant="h6" gutterBottom>
-              No classrooms found
+              {searchQuery ? "No matching classrooms" : "No classrooms found"}
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-              {user.type === "teacher" || user.type === "admin"
+              {searchQuery
+                ? "Try using different search terms"
+                : user.type === "teacher" || user.type === "admin"
                 ? "Create your first classroom to start teaching coding!"
                 : "You are not enrolled in any classrooms yet."}
             </Typography>
-            {(user.type === "teacher" || user.type === "admin") && (
+            {(user.type === "teacher" || user.type === "admin") &&
+              !searchQuery && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={handleCreateClassroom}
+                  sx={{ borderRadius: 2, textTransform: "none" }}
+                >
+                  Create Classroom
+                </Button>
+              )}
+            {user.type === "student" && !searchQuery && (
               <Button
                 variant="contained"
-                startIcon={<AddIcon />}
-                onClick={handleCreateClassroom}
+                color="secondary"
+                startIcon={<SchoolIcon />}
+                onClick={() => handleOpenEnrollDialog()}
                 sx={{ borderRadius: 2, textTransform: "none" }}
               >
-                Create Classroom
+                Enroll in Classroom
+              </Button>
+            )}
+            {searchQuery && (
+              <Button
+                variant="outlined"
+                onClick={handleClearSearch}
+                sx={{ borderRadius: 2, textTransform: "none" }}
+              >
+                Clear Search
               </Button>
             )}
           </Paper>
         ) : (
           <Grid container spacing={3}>
-            {classrooms.map((classroom) => (
+            {filteredClassrooms.map((classroom) => (
               <Grid item xs={12} sm={6} lg={4} key={classroom.id}>
                 <Card
                   sx={{
@@ -445,7 +634,7 @@ function ClassroomsPage() {
       <Dialog
         open={enrollmentKeyDialogOpen}
         onClose={() => setEnrollmentKeyDialogOpen(false)}
-        maxWidth="xs"
+        maxWidth="sm"
         fullWidth
       >
         <DialogTitle>
@@ -457,7 +646,15 @@ function ClassroomsPage() {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Share this key with your students so they can join your classroom.
           </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+
+          <Typography variant="subtitle2" gutterBottom>
+            Classroom ID: {selectedClassroom?.id}
+          </Typography>
+          <Typography variant="subtitle2" gutterBottom>
+            Classroom Name: {selectedClassroom?.name}
+          </Typography>
+
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>
             <TextField
               fullWidth
               value={selectedClassroom?.enrollmentKey || ""}
@@ -477,6 +674,80 @@ function ClassroomsPage() {
         <DialogActions>
           <Button onClick={() => setEnrollmentKeyDialogOpen(false)}>
             Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Enroll in Classroom Dialog */}
+      <Dialog
+        open={enrollDialogOpen}
+        onClose={() => setEnrollDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Typography variant="h6" fontWeight="bold">
+            Enroll in Classroom
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Enter the classroom ID and enrollment key provided by your teacher
+            to join a classroom.
+          </Typography>
+
+          <TextField
+            fullWidth
+            label="Classroom ID"
+            variant="outlined"
+            name="classroomID"
+            value={enrollmentFormData.classroomID}
+            onChange={handleEnrollmentFormChange}
+            placeholder="Enter classroom ID"
+            required
+            type="number"
+            sx={{ mb: 2 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PeopleIcon color="action" />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <TextField
+            fullWidth
+            label="Enrollment Key"
+            variant="outlined"
+            name="key"
+            value={enrollmentFormData.key}
+            onChange={handleEnrollmentFormChange}
+            placeholder="Enter enrollment key"
+            required
+            error={!!enrollmentError}
+            helperText={enrollmentError}
+            sx={{ mb: 2 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <KeyIcon color="action" />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEnrollDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleEnroll}
+            color="primary"
+            variant="contained"
+            disabled={
+              !enrollmentFormData.classroomID || !enrollmentFormData.key
+            }
+          >
+            Enroll
           </Button>
         </DialogActions>
       </Dialog>
@@ -508,6 +779,14 @@ function ClassroomsPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Success Snackbar */}
+      <Snackbar
+        open={enrollmentSuccess}
+        autoHideDuration={6000}
+        onClose={() => setEnrollmentSuccess(false)}
+        message="Successfully enrolled in classroom!"
+      />
     </Box>
   );
 }

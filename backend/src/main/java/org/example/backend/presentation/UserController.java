@@ -15,6 +15,16 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @PostMapping("/update")
+    public ResponseEntity<UserDTO> update(@RequestBody UserDTO userDTO) {
+        try {
+            UserDTO update = userService.update(userDTO);
+            return ResponseEntity.ok(update);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @GetMapping("/student/all")
     public ResponseEntity<List<UserDTO>> getStudents() {
         return ResponseEntity.ok(userService.getByType("student"));
@@ -23,5 +33,10 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
         return ResponseEntity.ok(userService.findById(id));
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
+        return ResponseEntity.ok(userService.findAll());
     }
 }

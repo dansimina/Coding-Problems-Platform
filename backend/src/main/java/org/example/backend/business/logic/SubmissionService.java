@@ -1,5 +1,6 @@
 package org.example.backend.business.logic;
 
+import jakarta.transaction.Transactional;
 import org.example.backend.business.logic.evaluator.EvaluationResult;
 import org.example.backend.business.logic.evaluator.SubmissionEvaluator;
 import org.example.backend.data.access.ProblemRepository;
@@ -38,6 +39,7 @@ public class SubmissionService {
     @Autowired
     private SubmissionMapper submissionMapper;
 
+    @Transactional
     public SubmissionDTO submit(NewSubmissionDTO submissionDTO) {
         Problem problem = problemRepository.findById(submissionDTO.problemId()).orElseThrow(() -> new IllegalArgumentException("Problem not found"));
         User user = userRepository.findById(submissionDTO.userId()).orElseThrow(() -> new IllegalArgumentException("User not found"));

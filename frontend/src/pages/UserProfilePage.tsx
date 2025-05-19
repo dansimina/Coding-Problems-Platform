@@ -25,8 +25,10 @@ import {
   TableRow,
   IconButton,
   Tooltip,
+  Stack,
 } from "@mui/material";
 import NavigationBar from "../components/NavigationBar";
+import EditProfileDialog from "../components/EditProfileDialog";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EmailIcon from "@mui/icons-material/Email";
@@ -73,6 +75,8 @@ function UserProfilePage() {
   const [selectedSubmission, setSelectedSubmission] =
     useState<SubmissionDTO | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [isEditProfileDialogOpen, setIsEditProfileDialogOpen] =
+    useState<boolean>(false);
 
   // Check if viewing own profile
   const isOwnProfile =
@@ -141,6 +145,20 @@ function UserProfilePage() {
 
   const handleBack = () => {
     navigate(-1);
+  };
+
+  const handleEditProfile = () => {
+    setIsEditProfileDialogOpen(true);
+  };
+
+  const handleProfileUpdateSuccess = (updatedUser: UserDTO) => {
+    // Update the displayed profile
+    setProfileUser(updatedUser);
+
+    // If this is the current user, update the current user state as well
+    if (isOwnProfile) {
+      setCurrentUser(updatedUser);
+    }
   };
 
   const handleViewSubmission = (submission: SubmissionDTO) => {
@@ -329,26 +347,41 @@ function UserProfilePage() {
                 {profileUser.firstName} {profileUser.lastName}
               </Typography>
 
-              <Grid container spacing={2} sx={{ mb: 2 }}>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <BadgeIcon color="primary" fontSize="small" />
-                    <Typography variant="body1">
-                      <strong>Username:</strong> {profileUser.username}
-                    </Typography>
-                  </Box>
-                </Grid>
+              {/* Edit Profile Button - Only visible if viewing own profile */}
+              {isOwnProfile && (
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={handleEditProfile}
+                  size="small"
+                  sx={{ mb: 2 }}
+                >
+                  Edit Profile
+                </Button>
+              )}
 
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <EmailIcon color="primary" fontSize="small" />
-                    <Typography variant="body1">
-                      <strong>Email:</strong> {profileUser.email}
-                    </Typography>
+              <Box sx={{ mb: 2 }}>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                  <Box sx={{ width: { xs: "100%", sm: "50%" } }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <BadgeIcon color="primary" fontSize="small" />
+                      <Typography variant="body1">
+                        <strong>Username:</strong> {profileUser.username}
+                      </Typography>
+                    </Box>
                   </Box>
-                </Grid>
 
-                <Grid item xs={12} sm={6}>
+                  <Box sx={{ width: { xs: "100%", sm: "50%" } }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <EmailIcon color="primary" fontSize="small" />
+                      <Typography variant="body1">
+                        <strong>Email:</strong> {profileUser.email}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Stack>
+
+                <Box sx={{ width: { xs: "100%", sm: "50%" }, mt: 2 }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <PersonIcon color="primary" fontSize="small" />
                     <Typography variant="body1">
@@ -369,8 +402,8 @@ function UserProfilePage() {
                       />
                     </Typography>
                   </Box>
-                </Grid>
-              </Grid>
+                </Box>
+              </Box>
             </Box>
 
             {/* Statistics Summary */}
@@ -453,365 +486,401 @@ function UserProfilePage() {
 
           {/* Submissions Tab */}
           <TabPanel value={tabValue} index={0}>
-            <Typography variant="h6" gutterBottom fontWeight="bold">
-              {isOwnProfile
-                ? "My Submissions"
-                : `${profileUser.firstName}'s Submissions`}
-            </Typography>
-
-            {submissions.length === 0 ? (
-              <Alert severity="info">No submissions found.</Alert>
-            ) : (
-              <TableContainer component={Paper} variant="outlined">
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Problem</TableCell>
-                      <TableCell>Language</TableCell>
-                      <TableCell>Score</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Submitted At</TableCell>
-                      <TableCell align="center">Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {submissions.map((submission) => (
-                      <TableRow key={submission.id} hover>
-                        <TableCell>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              gap: 1,
-                              alignItems: "center",
-                            }}
-                          >
-                            <Typography
-                              variant="body2"
-                              component="span"
-                              fontWeight="medium"
+            <Box sx={{ px: 2 }}>
+              {submissions.length === 0 ? (
+                <Alert severity="info">No submissions found.</Alert>
+              ) : (
+                <TableContainer component={Paper} variant="outlined">
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Problem</TableCell>
+                        <TableCell>Language</TableCell>
+                        <TableCell>Score</TableCell>
+                        <TableCell>Status</TableCell>
+                        <TableCell>Submitted At</TableCell>
+                        <TableCell align="center">Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {submissions.map((submission) => (
+                        <TableRow key={submission.id} hover>
+                          <TableCell>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                gap: 1,
+                                alignItems: "center",
+                              }}
                             >
-                              {submission.problem.title}
-                            </Typography>
+                              <Typography
+                                variant="body2"
+                                component="span"
+                                fontWeight="medium"
+                              >
+                                {submission.problem.title}
+                              </Typography>
+                              <Chip
+                                size="small"
+                                label={submission.problem.difficulty}
+                                color={getDifficultyColor(
+                                  submission.problem.difficulty
+                                )}
+                              />
+                            </Box>
+                          </TableCell>
+                          <TableCell>{submission.language}</TableCell>
+                          <TableCell>
                             <Chip
+                              label={`${submission.score}%`}
                               size="small"
-                              label={submission.problem.difficulty}
-                              color={getDifficultyColor(
-                                submission.problem.difficulty
+                              color={getScoreColor(submission.score)}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            {submission.score === 100 ? (
+                              <Chip
+                                label="Accepted"
+                                color="success"
+                                size="small"
+                              />
+                            ) : (
+                              <Chip label="Failed" color="error" size="small" />
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {formatDate(submission.submittedAt)}
+                          </TableCell>
+                          <TableCell align="center">
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "center",
+                                gap: 1,
+                              }}
+                            >
+                              {/* View Submission button - visible if viewing own profile or if admin/teacher */}
+                              {canViewSubmissions && (
+                                <Tooltip title="View Submission">
+                                  <IconButton
+                                    size="small"
+                                    color="primary"
+                                    onClick={() =>
+                                      handleViewSubmission(submission)
+                                    }
+                                  >
+                                    <VisibilityIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
                               )}
-                            />
-                          </Box>
-                        </TableCell>
-                        <TableCell>{submission.language}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={`${submission.score}%`}
-                            size="small"
-                            color={getScoreColor(submission.score)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {submission.score === 100 ? (
-                            <Chip
-                              label="Accepted"
-                              color="success"
-                              size="small"
-                            />
-                          ) : (
-                            <Chip label="Failed" color="error" size="small" />
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {formatDate(submission.submittedAt)}
-                        </TableCell>
-                        <TableCell align="center">
-                          <Box
-                            sx={{
-                              display: "flex",
-                              justifyContent: "center",
-                              gap: 1,
-                            }}
-                          >
-                            {/* View Submission button - visible if viewing own profile or if admin/teacher */}
-                            {canViewSubmissions && (
-                              <Tooltip title="View Submission">
+                              <Tooltip title="Go to Problem">
                                 <IconButton
                                   size="small"
-                                  color="primary"
+                                  color="secondary"
                                   onClick={() =>
-                                    handleViewSubmission(submission)
+                                    handleViewProblem(submission.problem.id)
                                   }
                                 >
-                                  <VisibilityIcon fontSize="small" />
+                                  <CodeIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                            )}
-                            <Tooltip title="Go to Problem">
-                              <IconButton
-                                size="small"
-                                color="secondary"
-                                onClick={() =>
-                                  handleViewProblem(submission.problem.id)
-                                }
-                              >
-                                <CodeIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </Box>
           </TabPanel>
 
           {/* Statistics Tab */}
           <TabPanel value={tabValue} index={1}>
-            <Typography variant="h6" gutterBottom fontWeight="bold">
-              Problem Solving Statistics
-            </Typography>
+            <Box sx={{ px: 2 }}>
+              <Stack spacing={3} sx={{ mb: 4 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", md: "row" },
+                    gap: 2,
+                  }}
+                >
+                  <Box sx={{ width: { xs: "100%", md: "33.33%" } }}>
+                    <Card variant="outlined" sx={{ height: "100%" }}>
+                      <CardContent>
+                        <Typography
+                          variant="subtitle1"
+                          color="text.secondary"
+                          gutterBottom
+                        >
+                          Problems Solved
+                        </Typography>
+                        <Typography
+                          variant="h3"
+                          color="primary"
+                          fontWeight="bold"
+                        >
+                          {stats.solvedProblems}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          out of {stats.totalProblems} attempted
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Box>
 
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-              <Grid item xs={12} md={4}>
-                <Card variant="outlined" sx={{ height: "100%" }}>
-                  <CardContent>
-                    <Typography
-                      variant="subtitle1"
-                      color="text.secondary"
-                      gutterBottom
-                    >
-                      Problems Solved
-                    </Typography>
-                    <Typography variant="h3" color="primary" fontWeight="bold">
-                      {stats.solvedProblems}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      out of {stats.totalProblems} attempted
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
+                  <Box sx={{ width: { xs: "100%", md: "33.33%" } }}>
+                    <Card variant="outlined" sx={{ height: "100%" }}>
+                      <CardContent>
+                        <Typography
+                          variant="subtitle1"
+                          color="text.secondary"
+                          gutterBottom
+                        >
+                          Success Rate
+                        </Typography>
+                        <Typography
+                          variant="h3"
+                          color="primary"
+                          fontWeight="bold"
+                        >
+                          {stats.solveRate}%
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          problems solved successfully
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Box>
 
-              <Grid item xs={12} md={4}>
-                <Card variant="outlined" sx={{ height: "100%" }}>
-                  <CardContent>
-                    <Typography
-                      variant="subtitle1"
-                      color="text.secondary"
-                      gutterBottom
-                    >
-                      Success Rate
-                    </Typography>
-                    <Typography variant="h3" color="primary" fontWeight="bold">
-                      {stats.solveRate}%
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      problems solved successfully
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
+                  <Box sx={{ width: { xs: "100%", md: "33.33%" } }}>
+                    <Card variant="outlined" sx={{ height: "100%" }}>
+                      <CardContent>
+                        <Typography
+                          variant="subtitle1"
+                          color="text.secondary"
+                          gutterBottom
+                        >
+                          Total Submissions
+                        </Typography>
+                        <Typography
+                          variant="h3"
+                          color="primary"
+                          fontWeight="bold"
+                        >
+                          {submissions.length}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          across {stats.totalProblems} problems
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Box>
+                </Box>
+              </Stack>
 
-              <Grid item xs={12} md={4}>
-                <Card variant="outlined" sx={{ height: "100%" }}>
-                  <CardContent>
-                    <Typography
-                      variant="subtitle1"
-                      color="text.secondary"
-                      gutterBottom
-                    >
-                      Total Submissions
-                    </Typography>
-                    <Typography variant="h3" color="primary" fontWeight="bold">
-                      {submissions.length}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      across {stats.totalProblems} problems
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
+              {/* Problems by Difficulty */}
+              <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                Problems by Difficulty
+              </Typography>
 
-            {/* Problems by Difficulty */}
-            <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-              Problems by Difficulty
-            </Typography>
-
-            <TableContainer component={Paper} variant="outlined" sx={{ mb: 4 }}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Difficulty</TableCell>
-                    <TableCell align="center">Attempted</TableCell>
-                    <TableCell align="center">Solved</TableCell>
-                    <TableCell align="center">Success Rate</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>
-                      <Chip label="Easy" size="small" color="success" />
-                    </TableCell>
-                    <TableCell align="center">{stats.easyProblems}</TableCell>
-                    <TableCell align="center">
-                      {
-                        getSubmissionStats().filter(
-                          (s) => s.problem.difficulty === "easy" && s.solved
-                        ).length
-                      }
-                    </TableCell>
-                    <TableCell align="center">
-                      {stats.easyProblems > 0
-                        ? `${Math.round(
-                            (getSubmissionStats().filter(
-                              (s) => s.problem.difficulty === "easy" && s.solved
-                            ).length /
-                              stats.easyProblems) *
-                              100
-                          )}%`
-                        : "N/A"}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>
-                      <Chip label="Medium" size="small" color="warning" />
-                    </TableCell>
-                    <TableCell align="center">{stats.mediumProblems}</TableCell>
-                    <TableCell align="center">
-                      {
-                        getSubmissionStats().filter(
-                          (s) => s.problem.difficulty === "medium" && s.solved
-                        ).length
-                      }
-                    </TableCell>
-                    <TableCell align="center">
-                      {stats.mediumProblems > 0
-                        ? `${Math.round(
-                            (getSubmissionStats().filter(
-                              (s) =>
-                                s.problem.difficulty === "medium" && s.solved
-                            ).length /
-                              stats.mediumProblems) *
-                              100
-                          )}%`
-                        : "N/A"}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>
-                      <Chip label="Hard" size="small" color="error" />
-                    </TableCell>
-                    <TableCell align="center">{stats.hardProblems}</TableCell>
-                    <TableCell align="center">
-                      {
-                        getSubmissionStats().filter(
-                          (s) => s.problem.difficulty === "hard" && s.solved
-                        ).length
-                      }
-                    </TableCell>
-                    <TableCell align="center">
-                      {stats.hardProblems > 0
-                        ? `${Math.round(
-                            (getSubmissionStats().filter(
-                              (s) => s.problem.difficulty === "hard" && s.solved
-                            ).length /
-                              stats.hardProblems) *
-                              100
-                          )}%`
-                        : "N/A"}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-
-            {/* Problem Solving History */}
-            <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-              Problem Solving History
-            </Typography>
-
-            {getSubmissionStats().length === 0 ? (
-              <Alert severity="info">No problems attempted yet.</Alert>
-            ) : (
-              <TableContainer component={Paper} variant="outlined">
+              <TableContainer
+                component={Paper}
+                variant="outlined"
+                sx={{ mb: 4 }}
+              >
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Problem</TableCell>
                       <TableCell>Difficulty</TableCell>
-                      <TableCell>Best Score</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell align="center">Submissions</TableCell>
-                      <TableCell align="center">Actions</TableCell>
+                      <TableCell align="center">Attempted</TableCell>
+                      <TableCell align="center">Solved</TableCell>
+                      <TableCell align="center">Success Rate</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {getSubmissionStats().map((stat) => (
-                      <TableRow key={stat.problem.id} hover>
-                        <TableCell>
-                          <Typography variant="body2" fontWeight="medium">
-                            {stat.problem.title}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            size="small"
-                            label={stat.problem.difficulty}
-                            color={getDifficultyColor(stat.problem.difficulty)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={`${stat.bestScore}%`}
-                            size="small"
-                            color={getScoreColor(stat.bestScore)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {stat.solved ? (
-                            <Chip label="Solved" color="success" size="small" />
-                          ) : (
-                            <Chip
-                              label="Unsolved"
-                              color="default"
-                              size="small"
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell align="center">
-                          {stat.submissionCount}
-                        </TableCell>
-                        <TableCell align="center">
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            startIcon={<CodeIcon />}
-                            onClick={() => handleViewProblem(stat.problem.id)}
-                          >
-                            View Problem
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    <TableRow>
+                      <TableCell>
+                        <Chip label="Easy" size="small" color="success" />
+                      </TableCell>
+                      <TableCell align="center">{stats.easyProblems}</TableCell>
+                      <TableCell align="center">
+                        {
+                          getSubmissionStats().filter(
+                            (s) => s.problem.difficulty === "easy" && s.solved
+                          ).length
+                        }
+                      </TableCell>
+                      <TableCell align="center">
+                        {stats.easyProblems > 0
+                          ? `${Math.round(
+                              (getSubmissionStats().filter(
+                                (s) =>
+                                  s.problem.difficulty === "easy" && s.solved
+                              ).length /
+                                stats.easyProblems) *
+                                100
+                            )}%`
+                          : "N/A"}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
+                        <Chip label="Medium" size="small" color="warning" />
+                      </TableCell>
+                      <TableCell align="center">
+                        {stats.mediumProblems}
+                      </TableCell>
+                      <TableCell align="center">
+                        {
+                          getSubmissionStats().filter(
+                            (s) => s.problem.difficulty === "medium" && s.solved
+                          ).length
+                        }
+                      </TableCell>
+                      <TableCell align="center">
+                        {stats.mediumProblems > 0
+                          ? `${Math.round(
+                              (getSubmissionStats().filter(
+                                (s) =>
+                                  s.problem.difficulty === "medium" && s.solved
+                              ).length /
+                                stats.mediumProblems) *
+                                100
+                            )}%`
+                          : "N/A"}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
+                        <Chip label="Hard" size="small" color="error" />
+                      </TableCell>
+                      <TableCell align="center">{stats.hardProblems}</TableCell>
+                      <TableCell align="center">
+                        {
+                          getSubmissionStats().filter(
+                            (s) => s.problem.difficulty === "hard" && s.solved
+                          ).length
+                        }
+                      </TableCell>
+                      <TableCell align="center">
+                        {stats.hardProblems > 0
+                          ? `${Math.round(
+                              (getSubmissionStats().filter(
+                                (s) =>
+                                  s.problem.difficulty === "hard" && s.solved
+                              ).length /
+                                stats.hardProblems) *
+                                100
+                            )}%`
+                          : "N/A"}
+                      </TableCell>
+                    </TableRow>
                   </TableBody>
                 </Table>
               </TableContainer>
-            )}
+
+              {/* Problem Solving History */}
+              <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                Problem Solving History
+              </Typography>
+
+              {getSubmissionStats().length === 0 ? (
+                <Alert severity="info">No problems attempted yet.</Alert>
+              ) : (
+                <TableContainer component={Paper} variant="outlined">
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Problem</TableCell>
+                        <TableCell>Difficulty</TableCell>
+                        <TableCell>Best Score</TableCell>
+                        <TableCell>Status</TableCell>
+                        <TableCell align="center">Submissions</TableCell>
+                        <TableCell align="center">Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {getSubmissionStats().map((stat) => (
+                        <TableRow key={stat.problem.id} hover>
+                          <TableCell>
+                            <Typography variant="body2" fontWeight="medium">
+                              {stat.problem.title}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              size="small"
+                              label={stat.problem.difficulty}
+                              color={getDifficultyColor(
+                                stat.problem.difficulty
+                              )}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={`${stat.bestScore}%`}
+                              size="small"
+                              color={getScoreColor(stat.bestScore)}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            {stat.solved ? (
+                              <Chip
+                                label="Solved"
+                                color="success"
+                                size="small"
+                              />
+                            ) : (
+                              <Chip
+                                label="Unsolved"
+                                color="default"
+                                size="small"
+                              />
+                            )}
+                          </TableCell>
+                          <TableCell align="center">
+                            {stat.submissionCount}
+                          </TableCell>
+                          <TableCell align="center">
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<CodeIcon />}
+                              onClick={() => handleViewProblem(stat.problem.id)}
+                            >
+                              View Problem
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </Box>
           </TabPanel>
         </Paper>
-      </Container>
 
-      {/* Submission Details Dialog - only shown to authorized users */}
-      {canViewSubmissions && (
-        <SubmissionDetailsDialog
-          open={isDialogOpen}
-          onClose={handleCloseDialog}
-          submission={selectedSubmission}
-          showUserInfo={false}
+        {/* Submission Details Dialog - only shown to authorized users */}
+        {canViewSubmissions && (
+          <SubmissionDetailsDialog
+            open={isDialogOpen}
+            onClose={handleCloseDialog}
+            submission={selectedSubmission}
+            showUserInfo={false}
+          />
+        )}
+
+        {/* Edit Profile Dialog */}
+        <EditProfileDialog
+          open={isEditProfileDialogOpen}
+          onClose={() => setIsEditProfileDialogOpen(false)}
+          user={profileUser}
+          onUpdateSuccess={handleProfileUpdateSuccess}
         />
-      )}
+      </Container>
     </Box>
   );
 }

@@ -27,6 +27,7 @@ import CategoryIcon from "@mui/icons-material/Category";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ClassIcon from "@mui/icons-material/Class";
+import PersonSearchIcon from "@mui/icons-material/PersonSearch"; // New import for icon
 import LoginDialog from "./LoginDialog";
 import { useNavigate } from "react-router-dom";
 
@@ -97,6 +98,9 @@ function NavigationBar() {
       case "addClassroom":
         navigate("/add-classroom");
         break;
+      case "users": // New case for users page
+        navigate("/users");
+        break;
       default:
         navigate("/");
         break;
@@ -142,6 +146,26 @@ function NavigationBar() {
         <ListItemText primary="My Classrooms" />
       </MenuItem>
     );
+
+    // Add Find Users menu item for ALL logged-in users
+    if (user) {
+      items.push(
+        <MenuItem
+          key="users"
+          onClick={() => handleMenuClick("users")}
+          sx={{
+            borderRadius: 1,
+            m: 0.5,
+            "&:hover": { bgcolor: "action.hover" },
+          }}
+        >
+          <ListItemIcon>
+            <PersonSearchIcon color="primary" />
+          </ListItemIcon>
+          <ListItemText primary="Find Users" />
+        </MenuItem>
+      );
+    }
 
     // Admin-only items
     if (user?.type === "admin") {
@@ -274,6 +298,8 @@ function NavigationBar() {
             {user ? (
               // User is logged in
               <Box sx={{ display: "flex", alignItems: "center" }}>
+                {/* Find Users button for logged-in users */}
+
                 <Tooltip title="Account settings">
                   <Box
                     onClick={(event) => setUserMenuAnchor(event.currentTarget)}
@@ -365,21 +391,6 @@ function NavigationBar() {
                       <AccountCircleIcon fontSize="small" />
                     </ListItemIcon>
                     <ListItemText primary="My Profile" />
-                  </MenuItem>
-
-                  {/* My Classrooms menu item in user dropdown for ALL users */}
-                  <MenuItem
-                    onClick={() => handleMenuClick("classrooms")}
-                    sx={{
-                      borderRadius: 1,
-                      m: 0.5,
-                      "&:hover": { bgcolor: "action.hover" },
-                    }}
-                  >
-                    <ListItemIcon>
-                      <ClassIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText primary="My Classrooms" />
                   </MenuItem>
 
                   <MenuItem

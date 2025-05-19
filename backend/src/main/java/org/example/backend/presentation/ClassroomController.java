@@ -2,6 +2,7 @@ package org.example.backend.presentation;
 
 import org.example.backend.business.logic.ClassroomService;
 import org.example.backend.dto.ClassroomDTO;
+import org.example.backend.dto.EnrollDTO;
 import org.example.backend.dto.HomeworkDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -45,5 +46,21 @@ public class ClassroomController {
     @GetMapping("/all/student/{studentId}")
     public ResponseEntity<List<ClassroomDTO>> getStudentClassroom(@PathVariable Long studentId) {
         return ResponseEntity.ok(classroomService.findByStudentId(studentId));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteClassroom(@PathVariable Long id) {
+        classroomService.deleteById(id);
+        return new ResponseEntity<>("Classroom deleted", HttpStatus.OK);
+    }
+
+    @PostMapping("/enroll")
+    public ResponseEntity<String> enroll(@RequestBody EnrollDTO enroll) {
+        try {
+            classroomService.enroll(enroll);
+            return ResponseEntity.ok("Classroom enrolled");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 }

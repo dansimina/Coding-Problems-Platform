@@ -17,6 +17,7 @@ import ClassroomDetailsPage from "./pages/ClassroomDetailsPage";
 import CreateHomeworkPage from "./pages/AddHomeworkPage";
 import HomeworkDetailsPage from "./pages/HomeworkDetailsPage";
 import UserProfilePage from "./pages/UserProfilePage";
+import UsersPage from "./pages/UsersPage";
 
 const theme = createTheme({
   palette: {
@@ -145,6 +146,7 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<MainPage />} />
+          <Route path="/users" element={<UsersPage />} />
           <Route path="/problems" element={<ProblemsPage />} />
           <Route path="/problems/:id" element={<ProblemDetailsPage />} />
           <Route path="/classrooms" element={<ClassroomsPage />} />

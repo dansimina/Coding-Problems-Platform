@@ -1,5 +1,6 @@
 package org.example.backend.business.logic;
 
+import jakarta.transaction.Transactional;
 import org.example.backend.data.access.*;
 import org.example.backend.dto.HomeworkDTO;
 import org.example.backend.dto.HomeworkStatusDTO;
@@ -39,6 +40,7 @@ public class HomeworkService {
     @Autowired
     private UserRepository userRepository;
 
+    @Transactional
     public HomeworkDTO createHomework(NewHomeworkDTO newHomeworkDTO) {
         Classroom classroom = classroomRepository.findById(newHomeworkDTO.classroomDTO().id()).orElse(null);
 
@@ -72,6 +74,7 @@ public class HomeworkService {
         return homeworkMapper.toDTO(homework);
     }
 
+    @Transactional
     public HomeworkDTO save(HomeworkDTO homeworkDTO) {
         Homework homework = homeworkMapper.toEntity(homeworkDTO);
         List<Problem> problems = new ArrayList<>();

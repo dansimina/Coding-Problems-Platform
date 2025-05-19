@@ -26,4 +26,12 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
             @Param("problemIds") List<Long> problemIds,
             @Param("deadline") LocalDateTime deadline
     );
+
+    @Query("""
+    SELECT s FROM Submission s
+    WHERE s.user.id = :userId
+      AND s.problem.id = :problemId
+      AND s.submittedAt = (SELECT MAX(s.submittedAt) FROM Submission s WHERE s.user.id = :userId)
+    """)
+    Submission lastSubmissionByUserIdAndProblemIdOrderBySubmittedAtDesc(@Param("userId") Long userId,@Param("problemId") Long problemId);
 }

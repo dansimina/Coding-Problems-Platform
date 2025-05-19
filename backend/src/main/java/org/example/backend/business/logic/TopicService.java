@@ -1,5 +1,6 @@
 package org.example.backend.business.logic;
 
+import jakarta.transaction.Transactional;
 import org.example.backend.data.access.TopicRepository;
 import org.example.backend.dto.TopicDTO;
 import org.example.backend.mappers.TopicMapper;
@@ -16,6 +17,7 @@ public class TopicService {
     @Autowired
     private TopicMapper topicMapper;
 
+    @Transactional
     public void save(TopicDTO topicDTO) {
         topicMapper.toDTO(topicRepository.save(topicMapper.toEntity(topicDTO)));
     }
