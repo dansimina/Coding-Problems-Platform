@@ -259,7 +259,7 @@ function CreateHomeworkPage() {
 
       if (isEditMode) {
         // If in edit mode, use PUT request to update
-        await api.post("/homework/save", newHomeworkDTO);
+        await api.post("/homework/update", newHomeworkDTO);
       } else {
         // If in create mode, use POST request to save
         await api.post("/homework/save", newHomeworkDTO);

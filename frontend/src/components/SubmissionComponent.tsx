@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import api from "../api";
 import {
   Box,
@@ -20,12 +20,15 @@ import {
   IconButton,
   Collapse,
   SelectChangeEvent,
+  Tooltip,
 } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import CodeIcon from "@mui/icons-material/Code";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { NewSubmissionDTO } from "../types/NewSubmissionDTO";
 import { SubmissionDTO } from "../types/SubmissionDTO";
 
@@ -33,13 +36,58 @@ interface SubmissionComponentProps {
   problemId: number;
 }
 
+// Define available languages with their properties
+interface LanguageOption {
+  value: string;
+  label: string;
+  extension: string;
+  boilerplate?: string;
+}
+
 function SubmissionComponent({ problemId }: SubmissionComponentProps) {
+  // Define available languages
+  const languageOptions: LanguageOption[] = [
+    {
+      value: "python",
+      label: "Python",
+      extension: ".py",
+      boilerplate:
+        '# Write your Python code here\n\ndef main():\n    # Your solution\n    pass\n\nif __name__ == "__main__":\n    main()',
+    },
+    {
+      value: "cpp",
+      label: "C++",
+      extension: ".cpp",
+      boilerplate:
+        "#include <iostream>\n#include <string>\n\nint main() {\n    // Your solution\n    \n    return 0;\n}",
+    },
+  ];
+
   const [code, setCode] = useState<string>("");
   const [language, setLanguage] = useState<string>("python");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [submission, setSubmission] = useState<SubmissionDTO | null>(null);
   const [isReportExpanded, setIsReportExpanded] = useState<boolean>(true);
+  const [isReportTruncated, setIsReportTruncated] = useState<boolean>(false);
+
+  // Max character limit for visible report
+  const MAX_VISIBLE_REPORT_LENGTH = 5000;
+  // Default visible lines in test results
+  const DEFAULT_VISIBLE_LINES = 10;
+  const [visibleLines, setVisibleLines] = useState<number>(
+    DEFAULT_VISIBLE_LINES
+  );
+
+  // Set default code based on selected language when component mounts or language changes
+  useEffect(() => {
+    const selectedLanguage = languageOptions.find(
+      (lang) => lang.value === language
+    );
+    if (selectedLanguage && selectedLanguage.boilerplate && !code.trim()) {
+      setCode(selectedLanguage.boilerplate);
+    }
+  }, [language]);
 
   // Get user from localStorage
   const getUserId = () => {
@@ -52,7 +100,38 @@ function SubmissionComponent({ problemId }: SubmissionComponentProps) {
   };
 
   const handleLanguageChange = (event: SelectChangeEvent) => {
-    setLanguage(event.target.value);
+    const newLanguage = event.target.value;
+
+    // If changing from one language to another with existing code, confirm
+    if (
+      code.trim() &&
+      code !==
+        languageOptions.find((lang) => lang.value === language)?.boilerplate
+    ) {
+      if (
+        window.confirm("Changing the language will reset your code. Continue?")
+      ) {
+        setLanguage(newLanguage);
+        // Set boilerplate code for the new language
+        const selectedLanguage = languageOptions.find(
+          (lang) => lang.value === newLanguage
+        );
+        if (selectedLanguage && selectedLanguage.boilerplate) {
+          setCode(selectedLanguage.boilerplate);
+        } else {
+          setCode("");
+        }
+      }
+    } else {
+      setLanguage(newLanguage);
+      // Set boilerplate code for the new language
+      const selectedLanguage = languageOptions.find(
+        (lang) => lang.value === newLanguage
+      );
+      if (selectedLanguage && selectedLanguage.boilerplate) {
+        setCode(selectedLanguage.boilerplate);
+      }
+    }
   };
 
   const handleCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,6 +154,7 @@ function SubmissionComponent({ problemId }: SubmissionComponentProps) {
     setIsSubmitting(true);
     setError("");
     setSubmission(null);
+    setIsReportTruncated(false);
 
     try {
       const submissionData: NewSubmissionDTO = {
@@ -89,11 +169,33 @@ function SubmissionComponent({ problemId }: SubmissionComponentProps) {
         submissionData
       );
       setSubmission(response.data);
-    } catch (error) {
+
+      // Check if report is very long (potentially causing DB issues)
+      if (
+        response.data.report &&
+        response.data.report.length > MAX_VISIBLE_REPORT_LENGTH
+      ) {
+        setIsReportTruncated(true);
+      }
+    } catch (error: any) {
       console.error("Submission error:", error);
-      setError("Failed to submit your solution. Please try again.");
+
+      // Handle specific database errors
+      if (
+        error.response?.status === 500 &&
+        error.response?.data?.message?.includes("Data too long")
+      ) {
+        setError(
+          "Your code generated a very large output that exceeded our system limits. Please simplify your solution or reduce debug output."
+        );
+      } else if (error.response?.data?.message) {
+        setError(error.response.data.message);
+      } else {
+        setError("Failed to submit your solution. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
+      setVisibleLines(DEFAULT_VISIBLE_LINES);
     }
   };
 
@@ -105,10 +207,19 @@ function SubmissionComponent({ problemId }: SubmissionComponentProps) {
 
   const parseTestResults = (report: string) => {
     const lines = report.split("\n").filter((line) => line.trim());
-    return lines.map((line, index) => {
+
+    // Truncate if report is very long
+    const processedLines = isReportTruncated
+      ? lines.slice(0, visibleLines)
+      : lines;
+
+    return processedLines.map((line, index) => {
       const isPassed = line.toLowerCase().includes("pass");
       const isFailed = line.toLowerCase().includes("fail");
       const isTimeLimit = line.toLowerCase().includes("time limit");
+      const isCompilationError = line
+        .toLowerCase()
+        .includes("compilation error");
 
       let color: "success" | "error" | "warning" | "default" = "default";
       let icon = null;
@@ -116,13 +227,17 @@ function SubmissionComponent({ problemId }: SubmissionComponentProps) {
       if (isPassed) {
         color = "success";
         icon = <CheckCircleIcon fontSize="small" />;
-      } else if (isFailed || isTimeLimit) {
+      } else if (isFailed || isTimeLimit || isCompilationError) {
         color = "error";
         icon = <CancelIcon fontSize="small" />;
       }
 
       return { text: line, color, icon, key: index };
     });
+  };
+
+  const handleShowMoreLines = () => {
+    setVisibleLines((prev) => prev + 10);
   };
 
   return (
@@ -140,9 +255,15 @@ function SubmissionComponent({ problemId }: SubmissionComponentProps) {
             value={language}
             label="Language"
             onChange={handleLanguageChange}
+            startAdornment={
+              <CodeIcon sx={{ mr: 1, color: "text.secondary" }} />
+            }
           >
-            <MenuItem value="python">Python</MenuItem>
-            {/* Add more languages as they become available */}
+            {languageOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
       </Box>
@@ -229,9 +350,20 @@ function SubmissionComponent({ problemId }: SubmissionComponentProps) {
                   alignItems: "center",
                 }}
               >
-                <Typography variant="h6" fontWeight="bold">
-                  Test Results
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <Typography variant="h6" fontWeight="bold">
+                    Test Results
+                  </Typography>
+                  {isReportTruncated && (
+                    <Tooltip title="The test output is very large and has been truncated for display">
+                      <ErrorOutlineIcon
+                        color="warning"
+                        sx={{ ml: 1 }}
+                        fontSize="small"
+                      />
+                    </Tooltip>
+                  )}
+                </Box>
                 <IconButton
                   onClick={() => setIsReportExpanded(!isReportExpanded)}
                 >
@@ -273,6 +405,20 @@ function SubmissionComponent({ problemId }: SubmissionComponentProps) {
                       </Typography>
                     </Box>
                   ))}
+
+                  {isReportTruncated &&
+                    visibleLines <
+                      submission.report
+                        .split("\n")
+                        .filter((line) => line.trim()).length && (
+                      <Button
+                        variant="text"
+                        onClick={handleShowMoreLines}
+                        sx={{ alignSelf: "center", mt: 1 }}
+                      >
+                        Show More Lines
+                      </Button>
+                    )}
                 </Stack>
               </Collapse>
             </CardContent>

@@ -76,31 +76,88 @@ public class HomeworkService {
 
     @Transactional
     public HomeworkDTO save(HomeworkDTO homeworkDTO) {
-        Homework homework = homeworkMapper.toEntity(homeworkDTO);
-        List<Problem> problems = new ArrayList<>();
+        // For existing homework
+        if (homeworkDTO.id() != null) {
+            Homework existingHomework = homeworkRepository.findById(homeworkDTO.id())
+                    .orElseThrow(() -> new RuntimeException("Homework not found"));
 
-        for(ProblemDTO problemDTO : homeworkDTO.problems()) {
-            Problem problem = problemRepository.findById(problemDTO.id()).orElse(null);
-            if(problem != null) {
-                problems.add(problem);
-                // Update the owning side of the relationship too
+            // Step 1: Get the current problems to update their references
+            List<Problem> currentProblems = new ArrayList<>();
+            if (existingHomework.getProblems() != null) {
+                currentProblems.addAll(existingHomework.getProblems());
+            }
+
+            // Step 2: Remove this homework from all current problems' homework lists
+            for (Problem problem : currentProblems) {
+                if (problem.getHomeworks() != null) {
+                    problem.getHomeworks().removeIf(h -> h.getId().equals(existingHomework.getId()));
+                }
+            }
+
+            // Save the problems with updated references
+            if (!currentProblems.isEmpty()) {
+                problemRepository.saveAll(currentProblems);
+            }
+
+            // Step 3: Clear the problems from the homework
+            existingHomework.setProblems(new ArrayList<>());
+            homeworkRepository.save(existingHomework);
+
+            // Step 4: Now set up the new relationships
+            List<Problem> newProblems = new ArrayList<>();
+            for (ProblemDTO problemDTO : homeworkDTO.problems()) {
+                Problem problem = problemRepository.findById(problemDTO.id())
+                        .orElseThrow(() -> new RuntimeException("Problem not found"));
+
+                newProblems.add(problem);
+
+                // Update the problem side
                 if (problem.getHomeworks() == null) {
                     problem.setHomeworks(new ArrayList<>());
                 }
-                if (!problem.getHomeworks().contains(homework)) {
-                    problem.getHomeworks().add(homework);
+                if (!problem.getHomeworks().contains(existingHomework)) {
+                    problem.getHomeworks().add(existingHomework);
                 }
             }
+
+            // Update the other fields from DTO
+            existingHomework.setTitle(homeworkDTO.title());
+            existingHomework.setDescription(homeworkDTO.description());
+            existingHomework.setDeadline(homeworkDTO.deadline());
+
+            // Set the new problems and save
+            existingHomework.setProblems(newProblems);
+            homeworkRepository.save(existingHomework);
+            problemRepository.saveAll(newProblems);
+
+            return homeworkMapper.toDTO(existingHomework);
         }
+        // For new homework - similar to previous approach
+        else {
+            Homework newHomework = homeworkMapper.toEntity(homeworkDTO);
+            List<Problem> problems = new ArrayList<>();
 
-        homework.setProblems(problems);
-        // Save the homework first
-        homework = homeworkRepository.save(homework);
+            for (ProblemDTO problemDTO : homeworkDTO.problems()) {
+                Problem problem = problemRepository.findById(problemDTO.id())
+                        .orElseThrow(() -> new RuntimeException("Problem not found"));
 
-        // Save all the updated problems
-        problemRepository.saveAll(problems);
+                problems.add(problem);
 
-        return homeworkMapper.toDTO(homework);
+                // Update the problem side
+                if (problem.getHomeworks() == null) {
+                    problem.setHomeworks(new ArrayList<>());
+                }
+                if (!problem.getHomeworks().contains(newHomework)) {
+                    problem.getHomeworks().add(newHomework);
+                }
+            }
+
+            newHomework.setProblems(problems);
+            homeworkRepository.save(newHomework);
+            problemRepository.saveAll(problems);
+
+            return homeworkMapper.toDTO(newHomework);
+        }
     }
 
     public HomeworkDTO findHomeworkById(Long id) {
@@ -230,11 +287,35 @@ public class HomeworkService {
         return homeworkStatusDTO;
     }
 
+    @Transactional
     public void delete(Long homeworkId) {
-        Homework homework = homeworkRepository.findById(homeworkId).orElse(null);
-        if(homework != null) {
-            homework.getProblems().clear();
-            homeworkRepository.delete(homework);
+        Homework homework = homeworkRepository.findById(homeworkId)
+                .orElseThrow(() -> new RuntimeException("Homework not found"));
+
+        // Step 1: Get all the problems associated with this homework
+        List<Problem> associatedProblems = new ArrayList<>();
+        if (homework.getProblems() != null) {
+            associatedProblems.addAll(homework.getProblems());
         }
+
+        // Step 2: Remove this homework from each problem's homeworks list
+        for (Problem problem : associatedProblems) {
+            if (problem.getHomeworks() != null) {
+                Homework finalHomework = homework;
+                problem.getHomeworks().removeIf(h -> h.getId().equals(finalHomework.getId()));
+            }
+        }
+
+        // Step 3: Save the updated problems
+        if (!associatedProblems.isEmpty()) {
+            problemRepository.saveAll(associatedProblems);
+        }
+
+        // Step 4: Clear the problems from the homework
+        homework.setProblems(new ArrayList<>());
+        homework = homeworkRepository.save(homework);
+
+        // Step 5: Now delete the homework
+        homeworkRepository.delete(homework);
     }
 }

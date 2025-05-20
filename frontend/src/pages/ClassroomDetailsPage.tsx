@@ -570,10 +570,6 @@ function ClassroomDetailsPage() {
               Are you sure you want to delete this assignment? This action
               cannot be undone.
             </Typography>
-            <Typography variant="body2" color="error" sx={{ mt: 2 }}>
-              All student submissions related to this assignment will also be
-              deleted.
-            </Typography>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setDeleteHomeworkDialogOpen(false)}>

@@ -286,12 +286,10 @@ function AddProblemPage() {
             author: `${user.firstName} ${user.lastName}`,
           }));
         }
-      } else {
-        // For edit mode, navigate back to problems page after success
-        setTimeout(() => {
-          navigate("/problems");
-        }, 2000);
       }
+      setTimeout(() => {
+        navigate("/problems");
+      }, 1500);
     } catch (error: any) {
       console.error(
         `Error ${isEditMode ? "updating" : "adding"} problem:`,

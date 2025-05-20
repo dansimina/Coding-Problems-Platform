@@ -1,7 +1,6 @@
 package org.example.backend.presentation;
 
 import org.example.backend.business.logic.HomeworkService;
-import org.example.backend.dto.ClassroomDTO;
 import org.example.backend.dto.HomeworkDTO;
 import org.example.backend.dto.HomeworkStatusDTO;
 import org.example.backend.dto.NewHomeworkDTO;
@@ -29,6 +28,12 @@ public class HomeworkController {
         }
     }
 
+    @PostMapping("/update")
+    public ResponseEntity<String> updateHomework(@RequestBody NewHomeworkDTO newHomeworkDTO) {
+        homeworkService.save(newHomeworkDTO.homeworkDTO());
+        return new ResponseEntity<>("Homework updated", HttpStatus.OK);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<HomeworkDTO> getHomeworkStatus(@PathVariable Long id) {
         return ResponseEntity.ok(homeworkService.findHomeworkById(id));
@@ -46,6 +51,7 @@ public class HomeworkController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> delete(@PathVariable Long id) {
-        return ResponseEntity.ok("Deleted homework: " + homeworkService.findHomeworkById(id));
+        homeworkService.delete(id);
+        return ResponseEntity.ok("Deleted homework.");
     }
 }

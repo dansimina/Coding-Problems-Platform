@@ -62,6 +62,7 @@ function ClassroomsPage() {
     useState<boolean>(false);
   const [enrollDialogOpen, setEnrollDialogOpen] = useState<boolean>(false);
   const [copySuccess, setCopySuccess] = useState<boolean>(false);
+  const [copyIdSuccess, setCopyIdSuccess] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   // Removed enrollmentKey state as it's now part of enrollmentFormData
   const [enrollmentSuccess, setEnrollmentSuccess] = useState<boolean>(false);
@@ -174,6 +175,14 @@ function ClassroomsPage() {
       navigator.clipboard.writeText(selectedClassroom.enrollmentKey);
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
+    }
+  };
+
+  const handleCopyClassroomId = () => {
+    if (selectedClassroom) {
+      navigator.clipboard.writeText(selectedClassroom.id.toString());
+      setCopyIdSuccess(true);
+      setTimeout(() => setCopyIdSuccess(false), 2000);
     }
   };
 
@@ -630,7 +639,7 @@ function ClassroomsPage() {
         </DialogActions>
       </Dialog>
 
-      {/* Enrollment Key Dialog */}
+      {/* Enrollment Key Dialog - MODIFIED */}
       <Dialog
         open={enrollmentKeyDialogOpen}
         onClose={() => setEnrollmentKeyDialogOpen(false)}
@@ -647,14 +656,31 @@ function ClassroomsPage() {
             Share this key with your students so they can join your classroom.
           </Typography>
 
+          {/* Modified Classroom ID field with copy button */}
           <Typography variant="subtitle2" gutterBottom>
-            Classroom ID: {selectedClassroom?.id}
+            Classroom ID:
           </Typography>
-          <Typography variant="subtitle2" gutterBottom>
-            Classroom Name: {selectedClassroom?.name}
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+            <TextField
+              fullWidth
+              value={selectedClassroom?.id || ""}
+              InputProps={{
+                readOnly: true,
+              }}
+              variant="outlined"
+              size="small"
+            />
+            <Tooltip title={copyIdSuccess ? "Copied!" : "Copy to clipboard"}>
+              <IconButton onClick={handleCopyClassroomId} color="primary">
+                <ContentCopyIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
 
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>
+          <Typography variant="subtitle2" gutterBottom>
+            Enrollment Key:
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <TextField
               fullWidth
               value={selectedClassroom?.enrollmentKey || ""}
@@ -768,8 +794,7 @@ function ClassroomsPage() {
             {selectedClassroom?.name}"?
           </Typography>
           <Typography variant="body2" color="error" sx={{ mt: 2 }}>
-            This action cannot be undone. All associated data including student
-            enrollment will be permanently deleted.
+            This action cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions>
