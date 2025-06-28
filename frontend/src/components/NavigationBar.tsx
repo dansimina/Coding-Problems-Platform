@@ -140,23 +140,25 @@ function NavigationBar() {
       </MenuItem>
     );
 
-    // Add Classrooms menu item for ALL users
-    items.push(
-      <MenuItem
-        key="classrooms"
-        onClick={() => handleMenuClick("classrooms")}
-        sx={{
-          borderRadius: 1,
-          m: 0.5,
-          "&:hover": { bgcolor: "action.hover" },
-        }}
-      >
-        <ListItemIcon>
-          <ClassIcon color="primary" />
-        </ListItemIcon>
-        <ListItemText primary="My Classrooms" />
-      </MenuItem>
-    );
+    // Add Classrooms menu item ONLY for logged-in users
+    if (user) {
+      items.push(
+        <MenuItem
+          key="classrooms"
+          onClick={() => handleMenuClick("classrooms")}
+          sx={{
+            borderRadius: 1,
+            m: 0.5,
+            "&:hover": { bgcolor: "action.hover" },
+          }}
+        >
+          <ListItemIcon>
+            <ClassIcon color="primary" />
+          </ListItemIcon>
+          <ListItemText primary="My Classrooms" />
+        </MenuItem>
+      );
+    }
 
     // Add Find Users menu item for ALL logged-in users
     if (user) {
