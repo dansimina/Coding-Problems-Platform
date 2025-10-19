@@ -12,7 +12,7 @@ import {
   CircularProgress,
   Snackbar,
 } from "@mui/material";
-import NavigationBar from "../components/NavigationBar";
+import AppNavigationBar from "../components/AppNavigationBar";
 import { useNavigate, useParams } from "react-router-dom";
 
 function AddTopicPage() {
@@ -21,6 +21,7 @@ function AddTopicPage() {
   const isEditMode = !!id;
 
   const [formData, setFormData] = useState<TopicDTO>({
+    id: null,
     title: "",
     description: "",
   });
@@ -96,6 +97,7 @@ function AddTopicPage() {
       if (!isEditMode) {
         // Only reset form in add mode, not edit mode
         setFormData({
+          id: null,
           title: "",
           description: "",
         });
@@ -128,7 +130,7 @@ function AddTopicPage() {
       <Box
         sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
       >
-        <NavigationBar />
+        <AppNavigationBar />
         <Container
           sx={{
             display: "flex",
@@ -145,7 +147,7 @@ function AddTopicPage() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <NavigationBar />
+      <AppNavigationBar />
 
       <Container component="main" maxWidth="md" sx={{ mt: 4, mb: 4 }}>
         <Paper

@@ -21,7 +21,7 @@ import {
   Button,
   Divider,
 } from "@mui/material";
-import NavigationBar from "../components/NavigationBar";
+import AppNavigationBar from "../components/AppNavigationBar";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -102,7 +102,7 @@ function UsersPage() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <NavigationBar />
+      <AppNavigationBar />
 
       <Container component="main" sx={{ mt: 4, mb: 4, flexGrow: 1 }}>
         <Box sx={{ mb: 4 }}>

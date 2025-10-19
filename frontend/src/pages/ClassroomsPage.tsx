@@ -10,7 +10,6 @@ import {
   Card,
   CardContent,
   CardActions,
-  Chip,
   CircularProgress,
   Alert,
   Avatar,
@@ -29,7 +28,7 @@ import {
   InputAdornment,
   Snackbar,
 } from "@mui/material";
-import NavigationBar from "../components/NavigationBar";
+import AppNavigationBar from "../components/AppNavigationBar";
 import { useNavigate } from "react-router-dom";
 import { ClassroomDTO } from "../types/ClassroomDTO";
 import { EnrollDTO } from "../types/EnrollDTO";
@@ -298,7 +297,7 @@ function ClassroomsPage() {
       <Box
         sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
       >
-        <NavigationBar />
+        <AppNavigationBar />
         <Container
           sx={{
             display: "flex",
@@ -318,7 +317,7 @@ function ClassroomsPage() {
       <Box
         sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
       >
-        <NavigationBar />
+        <AppNavigationBar />
         <Container
           sx={{
             display: "flex",
@@ -335,7 +334,7 @@ function ClassroomsPage() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <NavigationBar />
+      <AppNavigationBar />
 
       <Container component="main" sx={{ mt: 4, mb: 4, flexGrow: 1 }}>
         <Box

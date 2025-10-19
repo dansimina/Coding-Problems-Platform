@@ -1,11 +1,11 @@
 import { Box, Container, Typography } from "@mui/material";
-import AppNavigationBar from "../components/AppNavigationBar";
+import NavigationBar from "../components/NavigationBar";
 
 function MainPage() {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       {/* App Bar */}
-      <AppNavigationBar />
+      <NavigationBar />
 
       {/* Main content */}
       <Container component="main" sx={{ flexGrow: 1, py: 4 }}>

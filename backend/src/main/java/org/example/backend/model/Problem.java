@@ -5,23 +5,24 @@ import jakarta.persistence.*;
 import java.util.List;
 
 @Entity
+@Table(name = "app_problem")
 public class Problem extends AbstractEntity {
     private String title;
     private String author;
 
     @Lob
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     private String constraints;
     private String difficulty;
 
     @Lob
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "TEXT")
     private String officialSolution;
 
     @Lob
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "TEXT")
     private String image;
 
     @OneToMany(mappedBy = "problem")

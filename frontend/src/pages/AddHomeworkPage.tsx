@@ -26,7 +26,7 @@ import {
   IconButton,
   SelectChangeEvent,
 } from "@mui/material";
-import NavigationBar from "../components/NavigationBar";
+import AppNavigationBar from "../components/AppNavigationBar";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -305,7 +305,7 @@ function CreateHomeworkPage() {
       <Box
         sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
       >
-        <NavigationBar />
+        <AppNavigationBar />
         <Container
           sx={{
             display: "flex",
@@ -323,7 +323,7 @@ function CreateHomeworkPage() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <NavigationBar />
+      <AppNavigationBar />
 
       <Container component="main" sx={{ mt: 4, mb: 4, flexGrow: 1 }}>
         <Button

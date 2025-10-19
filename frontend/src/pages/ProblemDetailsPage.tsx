@@ -21,7 +21,7 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import NavigationBar from "../components/NavigationBar";
+import AppNavigationBar from "../components/AppNavigationBar";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CodeIcon from "@mui/icons-material/Code";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
@@ -159,7 +159,7 @@ function ProblemDetailsPage() {
       <Box
         sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
       >
-        <NavigationBar />
+        <AppNavigationBar />
         <Container
           sx={{
             display: "flex",
@@ -179,7 +179,7 @@ function ProblemDetailsPage() {
       <Box
         sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
       >
-        <NavigationBar />
+        <AppNavigationBar />
         <Container sx={{ mt: 4 }}>
           <Button
             startIcon={<ArrowBackIcon />}
@@ -196,7 +196,7 @@ function ProblemDetailsPage() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <NavigationBar />
+      <AppNavigationBar />
 
       <Container component="main" sx={{ mt: 4, mb: 4, flexGrow: 1 }}>
         <Button

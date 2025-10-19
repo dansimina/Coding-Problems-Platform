@@ -24,7 +24,7 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import NavigationBar from "../components/NavigationBar";
+import AppNavigationBar from "../components/AppNavigationBar";
 import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CodeIcon from "@mui/icons-material/Code";
@@ -144,7 +144,7 @@ function ProblemsPage() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <NavigationBar />
+      <AppNavigationBar />
 
       <Container component="main" sx={{ mt: 4, mb: 4, flexGrow: 1 }}>
         <Box sx={{ mb: 4 }}>

@@ -20,13 +20,12 @@ import {
   CardContent,
   Chip,
   Grid,
-  CardActions,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import NavigationBar from "../components/NavigationBar";
+import AppNavigationBar from "../components/AppNavigationBar";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import AddIcon from "@mui/icons-material/Add";
@@ -181,7 +180,7 @@ function ClassroomDetailsPage() {
       <Box
         sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
       >
-        <NavigationBar />
+        <AppNavigationBar />
         <Container
           sx={{
             display: "flex",
@@ -203,7 +202,7 @@ function ClassroomDetailsPage() {
       <Box
         sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
       >
-        <NavigationBar />
+        <AppNavigationBar />
         <Container sx={{ mt: 5, px: 4 }}>
           <Button
             startIcon={<ArrowBackIcon />}
@@ -225,7 +224,7 @@ function ClassroomDetailsPage() {
       <Box
         sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
       >
-        <NavigationBar />
+        <AppNavigationBar />
         <Container sx={{ mt: 5, px: 4 }}>
           <Button
             startIcon={<ArrowBackIcon />}
@@ -247,7 +246,7 @@ function ClassroomDetailsPage() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <NavigationBar />
+      <AppNavigationBar />
 
       <Container
         component="main"

@@ -27,7 +27,7 @@ import {
   Stack,
   LinearProgress,
 } from "@mui/material";
-import NavigationBar from "../components/NavigationBar";
+import AppNavigationBar from "../components/AppNavigationBar";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CodeIcon from "@mui/icons-material/Code";
 import PersonIcon from "@mui/icons-material/Person";
@@ -254,7 +254,7 @@ function HomeworkDetailsPage() {
       <Box
         sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
       >
-        <NavigationBar />
+        <AppNavigationBar />
         <Container
           sx={{
             display: "flex",
@@ -276,7 +276,7 @@ function HomeworkDetailsPage() {
       <Box
         sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
       >
-        <NavigationBar />
+        <AppNavigationBar />
         <Container sx={{ mt: 4, px: { xs: 3, sm: 4, md: 5 } }}>
           <Button
             startIcon={<ArrowBackIcon />}
@@ -295,7 +295,7 @@ function HomeworkDetailsPage() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <NavigationBar />
+      <AppNavigationBar />
 
       <Container
         component="main"

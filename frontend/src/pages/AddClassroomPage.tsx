@@ -19,7 +19,7 @@ import {
   SelectChangeEvent,
   OutlinedInput,
 } from "@mui/material";
-import NavigationBar from "../components/NavigationBar";
+import AppNavigationBar from "../components/AppNavigationBar";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ClassroomDTO } from "../types/ClassroomDTO";
 import { UserDTO } from "../types/UserDTO";
@@ -251,7 +251,7 @@ function CreateClassroomPage() {
       <Box
         sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
       >
-        <NavigationBar />
+        <AppNavigationBar />
         <Container component="main" maxWidth="md" sx={{ mt: 4, mb: 4 }}>
           <Paper
             elevation={3}
@@ -278,7 +278,7 @@ function CreateClassroomPage() {
   // Form display remains the same...
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <NavigationBar />
+      <AppNavigationBar />
 
       <Container component="main" maxWidth="md" sx={{ mt: 4, mb: 4 }}>
         {/* Debug info - remove in production */}

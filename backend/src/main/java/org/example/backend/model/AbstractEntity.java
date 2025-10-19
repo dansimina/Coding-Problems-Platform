@@ -1,16 +1,15 @@
 package org.example.backend.model;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.*;
 
 import java.util.Objects;
 
 @MappedSuperclass
+@Access(AccessType.FIELD)  // Add this annotation
 public abstract class AbstractEntity {
     @Id
-    @GeneratedValue
-    public Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     public Long getId() {
         return id;

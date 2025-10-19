@@ -22,7 +22,7 @@ import {
   FormControlLabel,
   SelectChangeEvent,
 } from "@mui/material";
-import NavigationBar from "../components/NavigationBar";
+import AppNavigationBar from "../components/AppNavigationBar";
 import { ProblemDTO } from "../types/ProblemDTO";
 import { TopicDTO } from "../types/TopicDTO";
 import { TestCaseDTO } from "../types/TestCaseDTO";
@@ -316,7 +316,7 @@ function AddProblemPage() {
       <Box
         sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
       >
-        <NavigationBar />
+        <AppNavigationBar />
         <Container
           sx={{
             display: "flex",
@@ -333,7 +333,7 @@ function AddProblemPage() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <NavigationBar />
+      <AppNavigationBar />
 
       <Container component="main" maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Paper

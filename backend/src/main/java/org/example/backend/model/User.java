@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 @Entity
+@Table(name = "app_user")
 public class User extends AbstractEntity {
     @NotBlank(message = "Userame is required!")
     @Size(min = 3, max = 50, message = "Name must be between 3 and 50 characters")
@@ -28,7 +29,6 @@ public class User extends AbstractEntity {
     private String email;
 
     @Lob
-    @Column(columnDefinition = "LONGTEXT")
     private String profilePicture;
 
     @ManyToOne
@@ -113,10 +113,6 @@ public class User extends AbstractEntity {
 
     public void setType(UserType type) {
         this.type = type;
-    }
-
-    public List<Submission> getSolutions() {
-        return submissions;
     }
 
     public void setSolutions(List<Submission> submissions) {

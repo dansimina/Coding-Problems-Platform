@@ -3,11 +3,13 @@ package org.example.backend.model;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Table(name = "app_homework")
 public class Homework extends AbstractEntity {
     private String title;
     private String description;

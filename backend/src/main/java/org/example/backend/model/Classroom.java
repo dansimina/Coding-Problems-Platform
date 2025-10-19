@@ -1,13 +1,11 @@
 package org.example.backend.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 
 import java.util.List;
 
 @Entity
+@Table(name = "app_classroom")
 public class Classroom extends AbstractEntity {
     private String name;
     private String description;

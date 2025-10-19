@@ -2,12 +2,14 @@ package org.example.backend.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "app_user_type")
 public class UserType extends AbstractEntity{
     @NotBlank(message = "Name is required")
     private String type;
